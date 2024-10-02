@@ -26,6 +26,13 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.0' // Use the correct group for Jakarta validation
+    implementation 'org.hibernate.validator:hibernate-validator:7.0.0.Final' // Ensure compatibility with Jakarta EE 9+
+
+
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'org.postgresql:postgresql'
