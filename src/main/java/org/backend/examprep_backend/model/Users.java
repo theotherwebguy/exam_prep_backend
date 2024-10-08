@@ -41,7 +41,7 @@ public class Users {
     private String surname;
 
     @NotBlank(message = "Contact number is mandatory")
-    @Pattern(regexp = "\\+?\\d{10,15}", message = "Contact number should be valid") // Adjust the regex as needed
+    @Pattern(regexp = "\\+?\\d{10,15}", message = "Contact number should be valid")
     @Column(nullable = false, unique = true)
     private String contactNumber;
 
@@ -51,7 +51,4 @@ public class Users {
     @Column(name = "role")
     private Set<Role> roles;  // Roles | Student, Instructor, etc.
 
-    @NotBlank(message = "Tenant ID is mandatory")
-    @Column(nullable = false)
-    private String tenantId;  // Unique ID for each college/tenant
 }

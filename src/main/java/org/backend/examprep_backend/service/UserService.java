@@ -17,9 +17,7 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public Users registerUser(Users user, String tenantId) {
-        // Associate user with the correct tenant
-        user.setTenantId(tenantId);
+    public Users registerUser(Users user) {
 
         // Hash password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -28,7 +26,32 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Optional<Users> findUserByEmailAndTenantId(String email, String tenantId) {
-        return userRepository.findByEmailAndTenantId(email, tenantId);
+    public Optional<Users> findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
+
+    public boolean authenticateUser(String email, String password) {
+        System.out.println("Authenticating user with email:" + email);
+
+        Optional<Users> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isPresent()) {
+            Users user = userOptional.get();
+            System.out.println("User found: " + user);
+
+            // Check if the password matches
+            if (passwordEncoder.matches(password, user.getPassword())) {
+                System.out.println("Password matches for user: " + user.getEmail());
+                return true; // Password matches, user is authenticated
+            } else {
+                System.out.println("Password does not match for user: " + user.getEmail());
+                throw new IllegalArgumentException("Invalid email or password.");
+            }
+        } else {
+            System.out.println("User not found for email: " + email );
+            throw new IllegalArgumentException("User not found with the provided email and tenant ID.");
+        }
+    }
+
+
 }
