@@ -29,25 +29,27 @@ class UserControllerIntegrationTest {
     @BeforeEach
     void setUp() {
         userRepository.deleteAll(); // Clean database before each test
-
-        // Sample user object
-        Users testUser = Users.builder()
-                .email("integration@test.com")
-                .password("password")
-                .fullNames("Jane Doe")
-                .surname("Doe")
-                .contactNumber("+1234567890")
-                .roles(Set.of(Role.STUDENT))
-                .build();
     }
 
     @Test
     void testRegisterUser_Success() throws Exception {
-        String userJson = "{ \"email\": \"integration@test.com\", \"password\": \"password\", \"fullNames\": \"Jane Doe\", \"surname\": \"Doe\", \"contactNumber\": \"+1234567890\", \"roles\": [\"STUDENT\"] }";
+        String userJson = "{ \"title\": \"Mr.\", \"email\": \"example@test.com\", \"password\": \"securePassword123\", \"fullNames\": \"John\", \"surname\": \"Doe\", \"contactNumber\": \"+1234567890\", \"roles\": [\"STUDENT\"] }";
 
         mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void testRegisterUser_MissingPassword() throws Exception {
+        String userJson = "{ \"email\": \"integration@test.com\", \"fullNames\": \"Jane Doe\", \"surname\": \"Doe\", \"contactNumber\": \"+1234567890\", \"roles\": [\"STUDENT\"] }"; // Removed password field
+
+        mockMvc.perform(post("/api/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isBadRequest()) // Expecting 400 for missing password
+                .andExpect(result ->
+                        result.getResponse().getContentAsString().contains("Error: Password cannot be null or empty.")); // Verify the error message
     }
 }
