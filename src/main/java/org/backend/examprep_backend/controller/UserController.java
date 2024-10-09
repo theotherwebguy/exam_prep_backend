@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -31,9 +32,16 @@ public class UserController {
                 return ResponseEntity.badRequest().body("Error: A user with this email already exists.");
             }
 
+            // Validate password
+            if (user.getPassword() == null || user.getPassword().isEmpty()) { // NEW CODE
+                return ResponseEntity.badRequest().body("Error: Password cannot be null or empty."); // NEW CODE
+            }
+
             // Register the user if all validations pass
             userService.registerUser(user);
+
             return ResponseEntity.ok("User registered successfully.");
+
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Error: User with this email or contact number already exists."+ e.getMessage());
@@ -43,6 +51,20 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred. Please try again."+ e.getMessage());
         }
+
+
+    }
+
+    // Catch validation errors
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        // Create a message that combines all validation errors
+        StringBuilder errorMessage = new StringBuilder("Validation failed: ");
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errorMessage.append(error.getField()).append(" - ").append(error.getDefaultMessage()).append("; ")
+        );
+
+        return ResponseEntity.badRequest().body(errorMessage.toString());
     }
 
     @GetMapping("/{email}")

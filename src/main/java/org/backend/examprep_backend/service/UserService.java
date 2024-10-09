@@ -39,6 +39,10 @@ public class UserService {
             Users user = userOptional.get();
             System.out.println("User found: " + user);
 
+            if (user.getPassword() == null || user.getPassword().isEmpty()) {
+                throw new IllegalArgumentException("Password cannot be null or empty.");
+            }
+
             // Check if the password matches
             if (passwordEncoder.matches(password, user.getPassword())) {
                 System.out.println("Password matches for user: " + user.getEmail());
