@@ -18,7 +18,11 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for testing purposes (re-enable in production)
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll() // Allow access to register and user endpoints
+                        // Allow access to register, login, and Swagger UI
+                        .requestMatchers("/api/users/register", "/api/users/login",
+                                "/swagger-ui.html", "/v3/api-docs/**",
+                                "/swagger-ui/**", "/swagger-resources/**",
+                                "/webjars/**").permitAll()
                         .anyRequest().authenticated() // All other endpoints require authentication
                 )
                 .httpBasic(withDefaults()) // Enable basic authentication for testing
