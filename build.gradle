@@ -36,6 +36,8 @@ dependencies {
     testImplementation 'org.mockito:mockito-core' // For mocking services
     testImplementation 'org.mockito:mockito-junit-jupiter' // For JUnit 5 integration with Mockito
 
+    //adding swagger ui
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.h2database:h2' // In-memory database for integration tests
