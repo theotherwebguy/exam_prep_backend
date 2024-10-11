@@ -5,10 +5,12 @@ import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.service.ClassesService;
 import org.backend.examprep_backend.service.CourseService;
+import org.backend.examprep_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -18,21 +20,36 @@ import java.util.*;
 public class LecturerController {
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private CourseService courseService;
 
     @Autowired
     private ClassesService classesService;
 
-    // API to get courses assigned to the lecturer
     @GetMapping("/courses")
-    public ResponseEntity<List<Course>> getCourses(Authentication authentication) {
-        // Assume authentication object gives us the logged-in lecturer
-        Users lecturer = (Users) authentication.getPrincipal();
-        List<Course> courses = courseService.getCoursesByLecturer(lecturer);
-        return ResponseEntity.ok(courses);
+    public ResponseEntity<List<Course>> getCourses() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            Optional<Users> lecturer = userService.findUserByEmail(username);
+
+            if (lecturer.isPresent()) {
+                List<Course> courses = courseService.getCoursesByLecturer(lecturer.get());
+                return ResponseEntity.ok(courses);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ArrayList<>());
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ArrayList<>());
+        }
     }
 
-    // Add a new class for a course
+
     @PostMapping("/courses/{courseId}/classes")
     public ResponseEntity<Classes> addClass(@PathVariable Long courseId, @RequestBody Classes newClass) {
         Course course = courseService.getCourseById(courseId);

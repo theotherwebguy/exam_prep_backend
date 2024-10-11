@@ -8,8 +8,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @Configuration
 public class SecurityConfig {
 
@@ -18,12 +16,10 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for testing purposes (re-enable in production)
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll() // Allow access to register and user endpoints
-                        .anyRequest().authenticated() // All other endpoints require authentication
+                        .anyRequest().permitAll() // Allow all endpoints without authentication
                 )
-                .httpBasic(withDefaults()) // Enable basic authentication for testing
-                .formLogin(AbstractHttpConfigurer::disable
-                );
+                .httpBasic(AbstractHttpConfigurer::disable) // Disable basic authentication for now
+                .formLogin(AbstractHttpConfigurer::disable); // Disable form login
 
         return http.build();
     }
