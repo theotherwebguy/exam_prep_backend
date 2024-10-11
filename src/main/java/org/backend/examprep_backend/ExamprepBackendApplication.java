@@ -35,7 +35,7 @@ public class ExamprepBackendApplication {
         }
 
         // You can specify additional conditions based on your requirements
-        boolean isValid = containsProfile(activeProfiles, "local") || containsProfile(activeProfiles, "prod");
+        boolean isValid = containsProfile(activeProfiles, "prod") || containsProfile(activeProfiles, "local");
 
         if (!isValid) {
             throw new IllegalStateException("The application must be run with either 'local' or 'prod' profile.");
