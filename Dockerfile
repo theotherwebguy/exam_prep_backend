@@ -19,5 +19,8 @@ RUN ./gradlew clean build -x test --no-daemon
 # Expose the port on which the Spring Boot app will run
 EXPOSE 8080
 
+# Use environment variable to define the profile (default to prod)
+ENV SPRING_PROFILES_ACTIVE=prod
+
 # Define the entry point for the container to run the JAR file
 CMD ["java", "-jar", "build/libs/examprep_backend-0.0.1-SNAPSHOT.jar"]
