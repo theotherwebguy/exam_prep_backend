@@ -1,24 +1,30 @@
 package org.backend.examprep_backend.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
+@Getter
+@Setter
 @Entity
-@Data
 public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long courseId;
 
-    @Column(nullable = false, unique = true)
+    @Column(length = 255)
     private String courseName;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String courseDescription;
 
-    private String image; // URL for course image
+    @Column(length = 255)
+    private String image;
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
-    private List<Domain> domains; // Domains associated with the course
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Domain> domains; // A course can have many domains
+
+    // Getters and Setters
 }

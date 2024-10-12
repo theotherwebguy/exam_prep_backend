@@ -9,8 +9,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @Configuration
 public class SecurityConfig {
 
@@ -19,19 +17,10 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for testing purposes (re-enable in production)
                 .authorizeHttpRequests(authz -> authz
-                        // Allow access to register, login, and Swagger UI
-                        .requestMatchers("/api/users/register", "/api/users/login",
-                                "/swagger-ui.html", "/v3/api-docs/**",
-                                "/swagger-ui/**", "/swagger-resources/**",
-                                "/webjars/**").permitAll()
-                        .requestMatchers("/api/**").permitAll() // Allow Course Management APIs
-                        .anyRequest().authenticated() // All other endpoints require authentication
+                        .anyRequest().permitAll() // Allow all endpoints without authentication
                 )
-                .httpBasic(withDefaults()) // Enable HTTP Basic Authentication for API requests
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Ensure no session is created
-                .formLogin(AbstractHttpConfigurer::disable) // Disable form-based login
-                .logout(withDefaults()); // Enable default logout functionality (if needed)
+                .httpBasic(AbstractHttpConfigurer::disable) // Disable basic authentication for now
+                .formLogin(AbstractHttpConfigurer::disable); // Disable form login
 
         return http.build();
     }

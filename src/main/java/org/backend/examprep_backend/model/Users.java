@@ -3,6 +3,7 @@ package org.backend.examprep_backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
@@ -14,10 +15,12 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
+@Setter
 public class Users {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Automatically generate ID
-    private Long id; // Primary key
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Email(message = "Email should be valid")
     @NotBlank(message = "Email is mandatory")
@@ -26,11 +29,11 @@ public class Users {
 
     @NotBlank(message = "Password is mandatory")
     @Column(nullable = false)
-    private String password;  // Store hashed password
+    private String password;
 
     @NotBlank(message = "Title is mandatory")
     @Column(nullable = false)
-    private String title;  // E.g., Mr., Ms., Dr.
+    private String title;
 
     @NotBlank(message = "Full names are mandatory")
     @Column(nullable = false)
@@ -49,6 +52,9 @@ public class Users {
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
-    private Set<Role> roles;  // Roles | Student, Instructor, etc.
+    @NotEmpty(message = "User must have at least one role")
+    private Set<Role> roles;
 
+    @OneToMany(mappedBy = "lecturer")
+    private Set<Classes> classes;  // Lecturer has many classes
 }

@@ -6,16 +6,21 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-public class Topic {
+public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long topicId;
+    private Long questionId;
+
+    @Column(columnDefinition = "TEXT")
+    private String questionText;
 
     @ManyToOne
     @JoinColumn(name = "domainId", nullable = false)
     private Domain domain;
 
-    private String topicName;
+    @ManyToOne
+    @JoinColumn(name = "topicId", nullable = false)
+    private Topic topic;
 
     // Getters and Setters
 }
