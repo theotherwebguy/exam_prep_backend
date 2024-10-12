@@ -28,7 +28,7 @@ public class CourseService {
         List<Classes> classesList = classesRepository.findByLecturer(lecturer);
         return classesList.stream()
                 .map(Classes::getCourse)
-                .distinct() // Avoid duplicate courses
+                .distinct()
                 .collect(Collectors.toList());
     }
 
