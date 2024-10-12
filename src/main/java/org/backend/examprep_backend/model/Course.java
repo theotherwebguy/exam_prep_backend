@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -21,6 +23,8 @@ public class Course {
     @Column(length = 255)
     private String image;
 
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Domain> domains; // A course can have many domains
 
     // Getters and Setters
 }

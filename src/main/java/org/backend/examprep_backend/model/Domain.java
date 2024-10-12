@@ -20,8 +20,9 @@ public class Domain {
     @Column(length = 255)
     private String domainName;
 
-    @OneToMany(mappedBy = "domain")
-    private List<Topic> topics; // List of topics within this domain
+
+    @OneToMany(mappedBy = "domain", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Topic> topics; // A domain can have many topics
 
     // Getters and Setters
 }
