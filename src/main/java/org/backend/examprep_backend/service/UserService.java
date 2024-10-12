@@ -43,10 +43,9 @@ public class UserService {
                 throw new IllegalArgumentException("Password cannot be null or empty.");
             }
 
-            // Check if the password matches
             if (passwordEncoder.matches(password, user.getPassword())) {
                 System.out.println("Password matches for user: " + user.getEmail());
-                return true; // Password matches, user is authenticated
+                return true;
             } else {
                 System.out.println("Password does not match for user: " + user.getEmail());
                 throw new IllegalArgumentException("Invalid email or password.");

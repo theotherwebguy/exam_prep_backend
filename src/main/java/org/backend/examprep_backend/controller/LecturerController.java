@@ -28,8 +28,9 @@ public class LecturerController {
     @Autowired
     private ClassesService classesService;
 
+    // Get courses with classes assigned to a lecturer
     @GetMapping("/courses")
-    public ResponseEntity<List<Course>> getCourses() {
+    public ResponseEntity<List<Course>> getCoursesWithClasses() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.isAuthenticated()) {
@@ -37,26 +38,32 @@ public class LecturerController {
             Optional<Users> lecturer = userService.findUserByEmail(username);
 
             if (lecturer.isPresent()) {
-                List<Course> courses = courseService.getCoursesByLecturer(lecturer.get());
+                List<Course> courses = courseService.getCoursesWithClassesByLecturer(lecturer.get());
                 return ResponseEntity.ok(courses);
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ArrayList<>());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
             }
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ArrayList<>());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ArrayList<>());
         }
     }
 
-
-    @PostMapping("/courses/{courseId}/classes")
-    public ResponseEntity<Classes> addClass(@PathVariable Long courseId, @RequestBody Classes newClass) {
-        Course course = courseService.getCourseById(courseId);
-        newClass.setCourse(course);
-        Classes createdClass = classesService.addClass(newClass);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdClass);
+    // Get classes by course for the lecturer
+    @GetMapping("/courses/{courseId}/classes")
+    public ResponseEntity<List<Classes>> getClassesByCourse(@PathVariable Long courseId) {
+        List<Classes> classes = classesService.getClassesByCourseId(courseId);
+        return ResponseEntity.ok(classes);
     }
+
+
+    // Add a class to a course
+//    @PostMapping("/courses/{courseId}/classes")
+//    public ResponseEntity<Classes> addClass(@PathVariable Long courseId, @RequestBody Classes newClass) {
+//        Course course = courseService.getCourseById(courseId);
+//        newClass.setCourse(course);
+//        Classes createdClass = classesService.addClass(newClass);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(createdClass);
+//    }
 
     // Update a class
     @PutMapping("/classes/{classId}")

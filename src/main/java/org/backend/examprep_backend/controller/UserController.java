@@ -1,5 +1,6 @@
 package org.backend.examprep_backend.controller;
 
+import org.backend.examprep_backend.dto.UserDto;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/users")
@@ -55,10 +57,30 @@ public class UserController {
 
     }
 
-    // Catch validation errors
+//    @PostMapping("/register")
+//    public ResponseEntity<Users> createUser(@RequestBody UserDto userDto) {
+//        // Ensure role is properly set
+//        if (userDto.getRole() == null) {
+//            throw new IllegalArgumentException("User must have at least one role.");
+//        }
+//
+//        Users user = Users.builder()
+//                .email(userDto.getEmail())
+//                .password(userDto.getPassword())
+//                .title(userDto.getTitle())
+//                .fullNames(userDto.getFullNames())
+//                .surname(userDto.getSurname())
+//                .contactNumber(userDto.getContactNumber())
+//                .roles(Set.of(userDto.getRole()))
+//                .build();
+//
+//        Users savedUser = userService.saveUser(user);
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+//    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        // Create a message that combines all validation errors
         StringBuilder errorMessage = new StringBuilder("Validation failed: ");
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errorMessage.append(error.getField()).append(" - ").append(error.getDefaultMessage()).append("; ")
@@ -79,7 +101,6 @@ public class UserController {
         System.out.println("Login attempt for email: " + email );
 
         try {
-            // Authenticate user
             boolean isAuthenticated = userService.authenticateUser(email, password);
 
             if (isAuthenticated) {

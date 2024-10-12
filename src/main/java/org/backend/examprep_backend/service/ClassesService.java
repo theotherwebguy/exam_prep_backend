@@ -15,8 +15,9 @@ public class ClassesService {
     @Autowired
     private ClassesRepository classesRepository;
 
-    public List<Classes> getClassesByCourse(Course course) {
-        return classesRepository.findByCourse(course);
+    // Get classes by courseId
+    public List<Classes> getClassesByCourseId(Long courseId) {
+        return classesRepository.findByCourse_CourseId(courseId);
     }
 
     // Add a new class
@@ -24,15 +25,19 @@ public class ClassesService {
         return classesRepository.save(newClass);
     }
 
-    // Update an existing class
+    // Update class
     public Classes updateClass(Long classId, Classes updatedClass) {
-        Classes existingClass = classesRepository.findById(classId).orElseThrow(() -> new ResourceNotFoundException("Class not found"));
+        Classes existingClass = classesRepository.findById(classId)
+                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
         existingClass.setClassName(updatedClass.getClassName());
+        // Other updates
         return classesRepository.save(existingClass);
     }
 
-    // Delete a class
+    // Delete class
     public void deleteClass(Long classId) {
-        classesRepository.deleteById(classId);
+        Classes existingClass = classesRepository.findById(classId)
+                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
+        classesRepository.delete(existingClass);
     }
 }

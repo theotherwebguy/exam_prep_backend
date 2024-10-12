@@ -21,9 +21,6 @@ public class Course {
     @Column(length = 255)
     private String image;
 
-    @ManyToOne
-    @JoinColumn(name = "userId")  // Lecturer reference
-    private Users lecturer;
 
     // Getters and Setters
 }

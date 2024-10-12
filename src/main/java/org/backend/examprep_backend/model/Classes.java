@@ -16,6 +16,9 @@ public class Classes {
     @Column(length = 255)
     private String className;
 
+    @Column(length = 255)
+    private String classDescription;
+
     @ManyToOne
     @JoinColumn(name = "courseId")
     private Course course;
