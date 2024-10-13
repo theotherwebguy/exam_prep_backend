@@ -27,6 +27,7 @@ public class Classes {
     @JoinColumn(name = "userId")  // Lecturer reference
     private Users lecturer;
 
+
     private Date startDate;
     private Date endDate;
 
