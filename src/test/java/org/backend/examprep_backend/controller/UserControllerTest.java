@@ -1,7 +1,8 @@
 package org.backend.examprep_backend.controller;
 
-import org.backend.examprep_backend.model.Role;
+import org.backend.examprep_backend.dto.UserDto;
 import org.backend.examprep_backend.model.Users;
+import org.backend.examprep_backend.model.Role;
 import org.backend.examprep_backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,9 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -25,6 +27,7 @@ class UserControllerTest {
     @InjectMocks
     private UserController userController;
 
+    private UserDto testUserDto;
     private Users testUser;
 
     @BeforeEach
@@ -32,60 +35,126 @@ class UserControllerTest {
         // Initialize mocks
         MockitoAnnotations.openMocks(this);
 
-        // Sample user object for testing
+        // Sample UserDto for testing
+        testUserDto = UserDto.builder()
+                .email("test@example.com")
+                .password("password")
+                .title("Mr.")
+                .fullNames("John Doe")
+                .surname("Doe")
+                .contactNumber("+1234567890")
+                .role("STUDENT")
+                .build();
+
+        // Sample Users entity for mocking service layer responses
         testUser = Users.builder()
                 .email("test@example.com")
                 .password("password")
                 .fullNames("John Doe")
                 .surname("Doe")
                 .contactNumber("+1234567890")
-                .roles(Set.of(Role.STUDENT))
+                .role(new Role("STUDENT"))
                 .build();
     }
 
     @Test
     void testRegisterUser_Success() {
-        // Mocking service layer to behave as expected
-        when(userService.findUserByEmail(testUser.getEmail())).thenReturn(Optional.empty());
-        when(userService.registerUser(any(Users.class))).thenReturn(testUser);
+        // Mocking service layer behavior
+        when(userService.findUserByEmail(testUserDto.getEmail())).thenReturn(Optional.empty());
+        when(userService.registerUser(any(UserDto.class))).thenReturn(testUser);
 
-        // Call controller method
-        ResponseEntity<?> response = userController.registerUser(testUser);
+        // Call the controller method
+        ResponseEntity<?> response = userController.registerUser(testUserDto);
 
         // Assertions to verify behavior
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("User registered successfully.", response.getBody());
 
-        // Verify service interaction
-        verify(userService, times(1)).registerUser(testUser);
+        // Verify that the service's registerUser method was called
+        verify(userService, times(1)).registerUser(any(UserDto.class));
     }
 
     @Test
     void testRegisterUser_UserExists() {
-        // Mock the service to return a user
-        when(userService.findUserByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        // Mock the service to return an existing user
+        when(userService.findUserByEmail(testUserDto.getEmail())).thenReturn(Optional.of(testUser));
 
         // Call the controller method
-        ResponseEntity<?> response = userController.registerUser(testUser);
+        ResponseEntity<?> response = userController.registerUser(testUserDto);
 
         // Assertions
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Error: A user with this email already exists.", response.getBody());
 
-        // Verify that registerUser method is not called
-        verify(userService, never()).registerUser(testUser);
+        // Verify that the registerUser method was not called
+        verify(userService, never()).registerUser(any(UserDto.class));
     }
 
     @Test
-    void testRegisterUser_NoRoles() {
-        // Set user roles to empty
-        testUser.setRoles(Set.of());
+    void testRegisterUser_NoRole() {
+        // Set user role to null
+        testUserDto.setRole(null);
 
         // Call the controller method
-        ResponseEntity<?> response = userController.registerUser(testUser);
+        ResponseEntity<?> response = userController.registerUser(testUserDto);
 
         // Assertions
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Error: User must have at least one role.", response.getBody());
+        assertEquals("Error: User must have a role.", response.getBody());
+    }
+
+    @Test
+    void testRegisterUser_EmptyPassword() {
+        // Set an empty password in the DTO
+        testUserDto.setPassword("");
+
+        // Call the controller method
+        ResponseEntity<?> response = userController.registerUser(testUserDto);
+
+        // Assertions
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Error: Password cannot be null or empty.", response.getBody());
+    }
+
+    @Test
+    void testAssignCourses_Success() {
+        // Mocking service layer behavior for course assignment
+        doNothing().when(userService).assignCoursesToUser(anyLong(), anyList());
+
+        // Call the controller method
+        ResponseEntity<?> response = userController.assignCourses(1L, Collections.emptyList());
+
+        // Assertions
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Courses assigned successfully.", response.getBody());
+
+        // Verify that the assignCoursesToUser method was called
+        verify(userService, times(1)).assignCoursesToUser(anyLong(), anyList());
+    }
+
+    @Test
+    void testAssignCourses_UserNotFound() {
+        // Mock service behavior for user not found
+        doThrow(new IllegalArgumentException("User not found")).when(userService).assignCoursesToUser(anyLong(), anyList());
+
+        // Call the controller method
+        ResponseEntity<?> response = userController.assignCourses(999L, Collections.emptyList());
+
+        // Assertions
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Error: User not found", response.getBody());
+    }
+
+    @Test
+    void testAssignCourses_InvalidRole() {
+        // Prepare test case for invalid role assignment
+        doThrow(new IllegalArgumentException("Invalid role for course assignment.")).when(userService).assignCoursesToUser(anyLong(), anyList());
+
+        // Call the controller method
+        ResponseEntity<?> response = userController.assignCourses(1L, Collections.emptyList());
+
+        // Assertions
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Error: Invalid role for course assignment.", response.getBody());
     }
 }

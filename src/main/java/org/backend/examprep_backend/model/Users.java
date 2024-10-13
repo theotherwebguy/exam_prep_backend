@@ -3,7 +3,7 @@ package org.backend.examprep_backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
@@ -48,12 +48,19 @@ public class Users {
     @Column(nullable = false, unique = true)
     private String contactNumber;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role")
-    @NotEmpty(message = "User must have at least one role")
-    private Set<Role> roles;
+    // Use ManyToOne for a single Role
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    @NotNull(message = "User must have a role")
+    private Role role;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_course",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    private Set<Course> courses;
 
     @OneToMany(mappedBy = "lecturer")
     private Set<Classes> classes;  // Lecturer has many classes
