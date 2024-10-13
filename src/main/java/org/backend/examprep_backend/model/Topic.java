@@ -1,4 +1,5 @@
 package org.backend.examprep_backend.model;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +13,8 @@ public class Topic {
     private Long topicId;
 
     @ManyToOne
-    @JoinColumn(name = "domainId", nullable = false)
+    @JoinColumn(name = "domain_id", nullable = false)
+    @JsonBackReference
     private Domain domain;
 
     private String topicName;

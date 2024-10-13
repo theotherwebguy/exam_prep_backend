@@ -1,9 +1,12 @@
 package org.backend.examprep_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -24,10 +27,10 @@ public class Course {
     @Column(length = 255)
     private String image;
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Domain> domains; // A course can have many domains
-
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Classes> classes;  // A course can have multiple classes
-    // Getters and Setters
+    @JsonBackReference // This prevents the recursive serialization of the "course" object inside "domains"
+    private List<Domain> domains;
+
+//    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    private Set<Classes> classes;
 }

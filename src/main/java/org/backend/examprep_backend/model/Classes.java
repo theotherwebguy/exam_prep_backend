@@ -31,5 +31,4 @@ public class Classes {
     private Date startDate;
     private Date endDate;
 
-    // Getters and Setters
 }
