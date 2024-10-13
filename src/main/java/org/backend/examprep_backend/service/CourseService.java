@@ -135,6 +135,10 @@ public class CourseService {
     public void deleteCourse(Long courseId) {
         courseRepository.deleteById(courseId);
     }
+    @Transactional
+    public List<Course> getAllCourses() {
+        return courseRepository.findAll();
+    }
 
 }
 
