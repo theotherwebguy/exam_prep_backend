@@ -48,34 +48,4 @@ public class LecturerController {
         }
     }
 
-    // Get classes by course for the lecturer
-    @GetMapping("/courses/{courseId}/classes")
-    public ResponseEntity<List<Classes>> getClassesByCourse(@PathVariable Long courseId) {
-        List<Classes> classes = classesService.getClassesByCourseId(courseId);
-        return ResponseEntity.ok(classes);
-    }
-
-
-    // Add a class to a course
-//    @PostMapping("/courses/{courseId}/classes")
-//    public ResponseEntity<Classes> addClass(@PathVariable Long courseId, @RequestBody Classes newClass) {
-//        Course course = courseService.getCourseById(courseId);
-//        newClass.setCourse(course);
-//        Classes createdClass = classesService.addClass(newClass);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(createdClass);
-//    }
-
-    // Update a class
-    @PutMapping("/classes/{classId}")
-    public ResponseEntity<Classes> updateClass(@PathVariable Long classId, @RequestBody Classes updatedClass) {
-        Classes updated = classesService.updateClass(classId, updatedClass);
-        return ResponseEntity.ok(updated);
-    }
-
-    // Delete a class
-    @DeleteMapping("/classes/{classId}")
-    public ResponseEntity<Void> deleteClass(@PathVariable Long classId) {
-        classesService.deleteClass(classId);
-        return ResponseEntity.noContent().build();
-    }
 }
