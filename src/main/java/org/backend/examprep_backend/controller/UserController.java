@@ -1,7 +1,10 @@
 package org.backend.examprep_backend.controller;
 
 import org.backend.examprep_backend.dto.UserDto;
+import org.backend.examprep_backend.model.Course;
+import org.backend.examprep_backend.model.Role;
 import org.backend.examprep_backend.model.Users;
+import org.backend.examprep_backend.repository.RoleRepository;
 import org.backend.examprep_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -10,8 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,64 +24,62 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody Users user) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserDto userDto) {
         try {
-            // Ensure roles are set before saving
-            if (user.getRoles() == null || user.getRoles().isEmpty()) {
-                return ResponseEntity.badRequest().body("Error: User must have at least one role.");
+            // Ensure role is set before saving
+            if (userDto.getRole() == null || userDto.getRole().isEmpty()) {
+                return ResponseEntity.badRequest().body("Error: User must have a role.");
             }
 
-            // Check if user already exists with the same email and tenantId
-            Optional<Users> existingUser = userService.findUserByEmail(user.getEmail());
+            // Check if user already exists with the same email
+            Optional<Users> existingUser = userService.findUserByEmail(userDto.getEmail());
             if (existingUser.isPresent()) {
                 return ResponseEntity.badRequest().body("Error: A user with this email already exists.");
             }
 
             // Validate password
-            if (user.getPassword() == null || user.getPassword().isEmpty()) { // NEW CODE
-                return ResponseEntity.badRequest().body("Error: Password cannot be null or empty."); // NEW CODE
+            if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
+                return ResponseEntity.badRequest().body("Error: Password cannot be null or empty.");
             }
 
-            // Register the user if all validations pass
-            userService.registerUser(user);
+            // Fetch the role from the database
+            Role role = roleRepository.findByName(userDto.getRole())
+                    .orElseThrow(() -> new IllegalArgumentException("Error: Role not found"));
 
+            // Set the role in the user DTO before passing it to the service
+            userDto.setRole(role.getName()); // Set the role name in the DTO
+
+            // Register the user
+            userService.registerUser(userDto); // Pass the DTO to UserService
             return ResponseEntity.ok("User registered successfully.");
 
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Error: User with this email or contact number already exists."+ e.getMessage());
+                    .body("Error: User with this email or contact number already exists." + e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred. Please try again."+ e.getMessage());
+                    .body("An unexpected error occurred. Please try again." + e.getMessage());
         }
-
-
     }
 
-//    @PostMapping("/register")
-//    public ResponseEntity<Users> createUser(@RequestBody UserDto userDto) {
-//        // Ensure role is properly set
-//        if (userDto.getRole() == null) {
-//            throw new IllegalArgumentException("User must have at least one role.");
-//        }
-//
-//        Users user = Users.builder()
-//                .email(userDto.getEmail())
-//                .password(userDto.getPassword())
-//                .title(userDto.getTitle())
-//                .fullNames(userDto.getFullNames())
-//                .surname(userDto.getSurname())
-//                .contactNumber(userDto.getContactNumber())
-//                .roles(Set.of(userDto.getRole()))
-//                .build();
-//
-//        Users savedUser = userService.saveUser(user);
-//
-//        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-//    }
+    @PostMapping("/{userId}/assignCourses")
+    public ResponseEntity<?> assignCourses(@PathVariable Long userId, @RequestBody List<Course> courses) {
+        try {
+            userService.assignCoursesToUser(userId, courses);
+            return ResponseEntity.ok("Courses assigned successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again." + e.getMessage());
+        }
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -98,7 +100,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam String email, @RequestParam String password) {
-        System.out.println("Login attempt for email: " + email );
+        System.out.println("Login attempt for email: " + email);
 
         try {
             boolean isAuthenticated = userService.authenticateUser(email, password);
@@ -114,10 +116,9 @@ public class UserController {
             System.out.println("Error during login for email: " + email + ": " + e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Unexpected error during login for email: " + email +  ": " + e.getMessage());
+            System.out.println("Unexpected error during login for email: " + email + ": " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred. Please try again. " + e.getMessage());
         }
     }
-
 }
