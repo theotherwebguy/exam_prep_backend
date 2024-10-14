@@ -5,6 +5,7 @@ import java.util.List;
 
 @Data
 public class DomainDTO {
+    private Long domainId;
     private String domainName;
-    private List<String> topics; // List of topic names
+    private List<TopicDTO> topics; // List of topic names
 }

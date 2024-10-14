@@ -1,9 +1,12 @@
 package org.backend.examprep_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 @Getter
 @Setter
@@ -13,18 +16,18 @@ public class Domain {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long domainId;
 
-    @ManyToOne
-    @JoinColumn(name = "courseId", nullable = false)
-    private Course course;
-
     @Column(length = 255)
     private String domainName;
 
 
-    @OneToMany(mappedBy = "domain", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Topic> topics; // A domain can have many topics
+    @ManyToOne
+    @JoinColumn(name = "course_id", nullable = false)
+    @JsonBackReference  // Prevents recursion during serialization
+    private Course course;
 
-    // Getters and Setters
+    @OneToMany(mappedBy = "domain", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<Topic> topics;
 }
 
 

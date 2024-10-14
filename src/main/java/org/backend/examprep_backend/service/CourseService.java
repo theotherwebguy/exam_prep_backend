@@ -4,9 +4,12 @@ import jakarta.transaction.Transactional;
 import org.backend.examprep_backend.ResourceNotFoundException;
 import org.backend.examprep_backend.dto.CourseDTO;
 import org.backend.examprep_backend.dto.DomainDTO;
+import org.backend.examprep_backend.dto.TopicDTO;
 import org.backend.examprep_backend.model.*;
 import org.backend.examprep_backend.repository.ClassesRepository;
 import org.backend.examprep_backend.repository.CourseRepository;
+import org.backend.examprep_backend.repository.DomainRepository;
+import org.backend.examprep_backend.repository.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +24,13 @@ public class CourseService {
     private CourseRepository courseRepository;
 
     @Autowired
+    private DomainRepository domainRepository;
+
+    @Autowired
     private ClassesRepository classesRepository;
+
+    @Autowired
+    private TopicRepository topicRepository;
 
     // Retrieve courses that have classes assigned to the lecturer
     public List<Course> getCoursesWithClassesByLecturer(Users lecturer) {
@@ -32,113 +41,83 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
+    public Course saveCourseWithDomainsAndTopics(CourseDTO courseDTO) {
+        Course course = new Course();
+        course.setCourseName(courseDTO.getCourseName());
+        course.setCourseDescription(courseDTO.getCourseDescription());
+        course.setImage(courseDTO.getImage());
+
+        List<Domain> domainEntities = new ArrayList<>();
+        for (DomainDTO domainDTO : courseDTO.getDomains()) {
+            Domain domain = new Domain();
+            domain.setDomainName(domainDTO.getDomainName());
+            domain.setCourse(course);  // Link course to domain
+
+            List<Topic> topicEntities = new ArrayList<>();
+            for (TopicDTO topicDTO : domainDTO.getTopics()) {
+                Topic topic = new Topic();
+                topic.setTopicName(topicDTO.getTopicName());
+                topic.setDomain(domain);  // Link domain to topic
+                topicEntities.add(topic);
+            }
+
+            domain.setTopics(topicEntities);
+            domainEntities.add(domain);
+        }
+
+        course.setDomains(domainEntities);
+        return courseRepository.save(course);  // Cascade save will save everything
+    }
+
+    public Course updateCourseWithDomainsAndTopics(Long courseId, CourseDTO courseDTO) {
+        Course existingCourse = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+
+        existingCourse.setCourseName(courseDTO.getCourseName());
+        existingCourse.setCourseDescription(courseDTO.getCourseDescription());
+        existingCourse.setImage(courseDTO.getImage());
+
+        List<Domain> updatedDomains = new ArrayList<>();
+        for (DomainDTO domainDTO : courseDTO.getDomains()) {
+            Domain domain = domainRepository.findById(domainDTO.getDomainId())
+                    .orElse(new Domain());
+            domain.setDomainName(domainDTO.getDomainName());
+            domain.setCourse(existingCourse);  // Set course reference
+
+            List<Topic> updatedTopics = new ArrayList<>();
+            for (TopicDTO topicDTO : domainDTO.getTopics()) {
+                Topic topic = topicRepository.findById(topicDTO.getTopicId())
+                        .orElse(new Topic());
+                topic.setTopicName(topicDTO.getTopicName());
+                topic.setDomain(domain);  // Set domain reference
+                updatedTopics.add(topic);
+            }
+
+            domain.setTopics(updatedTopics);
+            updatedDomains.add(domain);
+        }
+
+        existingCourse.setDomains(updatedDomains);
+        return courseRepository.save(existingCourse);
+    }
+
+    public void deleteCourse(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        courseRepository.delete(course);  // Cascade delete will handle domains and topics
+    }
+
+    public List<Course> getAllCourses() {
+        return courseRepository.findAll();
+    }
+
     public Course getCourseById(Long courseId) {
         return courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
     }
 
 
-    @Transactional
-    public Course createCourse(CourseDTO courseDTO) {
-        Course course = new Course();
-        course.setCourseName(courseDTO.getCourseName());
-        course.setCourseDescription(courseDTO.getCourseDescription());
-        course.setImage(courseDTO.getImage());
 
-        List<Domain> domains = new ArrayList<>();
-        for (DomainDTO domainDTO : courseDTO.getDomains()) {
-            Domain domain = new Domain();
-            domain.setDomainName(domainDTO.getDomainName());
-            domain.setCourse(course);
-
-            List<Topic> topics = new ArrayList<>();
-            for (String topicName : domainDTO.getTopics()) {
-                Topic topic = new Topic();
-                topic.setTopicName(topicName);
-                topic.setDomain(domain);
-                topics.add(topic);
-            }
-            domain.setTopics(topics);
-            domains.add(domain);
-        }
-
-        course.setDomains(domains);
-        return courseRepository.save(course);
-    }
-    @Transactional
-    public Course updateCourse(Long courseId, CourseDTO courseDTO) {
-        // Find existing course by ID
-        return courseRepository.findById(courseId).map(existingCourse -> {
-            // Update basic course details
-            existingCourse.setCourseName(courseDTO.getCourseName());
-            existingCourse.setCourseDescription(courseDTO.getCourseDescription());
-            existingCourse.setImage(courseDTO.getImage());
-
-            // Handle domains and topics
-            List<Domain> newDomains = new ArrayList<>();
-
-            // Map of domain names to domain entities for existing course domains
-            List<Domain> existingDomains = existingCourse.getDomains();
-            List<String> newDomainNames = courseDTO.getDomains().stream()
-                    .map(DomainDTO::getDomainName).collect(Collectors.toList());
-
-            // Remove domains that are not in the updated list
-            existingDomains.removeIf(domain -> !newDomainNames.contains(domain.getDomainName()));
-
-            for (DomainDTO domainDTO : courseDTO.getDomains()) {
-                Domain existingDomain = existingDomains.stream()
-                        .filter(d -> d.getDomainName().equals(domainDTO.getDomainName()))
-                        .findFirst().orElse(null);
-
-                if (existingDomain == null) {
-                    Domain newDomain = new Domain();
-                    newDomain.setDomainName(domainDTO.getDomainName());
-                    newDomain.setCourse(existingCourse);
-
-                    List<Topic> topics = new ArrayList<>();
-                    for (String topicName : domainDTO.getTopics()) {
-                        Topic topic = new Topic();
-                        topic.setTopicName(topicName);
-                        topic.setDomain(newDomain);
-                        topics.add(topic);
-                    }
-                    newDomain.setTopics(topics);
-                    newDomains.add(newDomain);
-                } else {
-                    // Existing domain, update it
-                    existingDomain.setDomainName(domainDTO.getDomainName());
-
-                    // Update topics for this domain
-                    List<String> newTopics = domainDTO.getTopics();
-                    existingDomain.getTopics().removeIf(topic -> !newTopics.contains(topic.getTopicName()));
-
-                    for (String topicName : newTopics) {
-                        boolean topicExists = existingDomain.getTopics().stream()
-                                .anyMatch(t -> t.getTopicName().equals(topicName));
-                        if (!topicExists) {
-                            Topic newTopic = new Topic();
-                            newTopic.setTopicName(topicName);
-                            newTopic.setDomain(existingDomain);
-                            existingDomain.getTopics().add(newTopic);
-                        }
-                    }
-                }
-            }
-
-            existingCourse.getDomains().addAll(newDomains);
-
-            // Save and return the updated course
-            return courseRepository.save(existingCourse);
-        }).orElseThrow(() -> new RuntimeException("Course not found"));
-    }
-    @Transactional
-    public void deleteCourse(Long courseId) {
-        courseRepository.deleteById(courseId);
-    }
-    @Transactional
-    public List<Course> getAllCourses() {
-        return courseRepository.findAll();
-    }
 
 }
 
