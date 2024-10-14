@@ -99,4 +99,20 @@ public class UserService {
 
         userRepository.save(user); // Save the updated user
     }
+
+    public void saveAllUsers(List<Users> users) {
+        userRepository.saveAll(users); // Save all parsed students
+    }
+    public void saveUser(Users user) {
+        userRepository.save(user);
+    }
+
+    public void saveAll(List<Users> users) {
+        userRepository.saveAll(users);
+    }
+
+    public Role findRoleById(Long roleId) {
+        return roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found with ID: " + roleId));
+    }
 }

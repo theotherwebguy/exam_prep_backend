@@ -1,9 +1,8 @@
 package org.backend.examprep_backend.controller;
 
-import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Users;
-import org.backend.examprep_backend.service.ClassesService;
+import org.backend.examprep_backend.service.ClassService;
 import org.backend.examprep_backend.service.CourseService;
 import org.backend.examprep_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,7 @@ public class LecturerController {
     private CourseService courseService;
 
     @Autowired
-    private ClassesService classesService;
+    private ClassService classService;
 
     // Get courses with classes assigned to a lecturer
     @GetMapping("/courses")

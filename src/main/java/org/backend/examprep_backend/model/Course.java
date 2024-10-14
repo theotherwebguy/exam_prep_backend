@@ -31,6 +31,4 @@ public class Course {
     @JsonBackReference // This prevents the recursive serialization of the "course" object inside "domains"
     private List<Domain> domains;
 
-//    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-//    private Set<Classes> classes;
 }
