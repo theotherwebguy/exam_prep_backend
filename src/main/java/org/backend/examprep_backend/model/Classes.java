@@ -29,4 +29,5 @@ public class Classes {
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
     private Users lecturer;
+
 }

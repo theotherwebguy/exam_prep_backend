@@ -7,6 +7,6 @@ import java.util.List;
 public class CourseDTO {
     private String courseName;
     private String courseDescription;
-    private String image; // Image URL
+    private byte[] image;  // Image URL
     private List<DomainDTO> domains;
 }

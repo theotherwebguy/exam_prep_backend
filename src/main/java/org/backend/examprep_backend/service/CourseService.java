@@ -12,7 +12,9 @@ import org.backend.examprep_backend.repository.DomainRepository;
 import org.backend.examprep_backend.repository.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,11 +44,15 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    public Course saveCourseWithDomainsAndTopics(CourseDTO courseDTO) {
+    public Course saveCourseWithDomainsAndTopics(CourseDTO courseDTO, MultipartFile imageFile) throws IOException {
         Course course = new Course();
         course.setCourseName(courseDTO.getCourseName());
         course.setCourseDescription(courseDTO.getCourseDescription());
-        course.setImage(courseDTO.getImage());
+
+        // If there's an image file, set it in the course
+        if (imageFile != null && !imageFile.isEmpty()) {
+            course.setImage(imageFile.getBytes());  // Save image as byte array
+        }
 
         List<Domain> domainEntities = new ArrayList<>();
         for (DomainDTO domainDTO : courseDTO.getDomains()) {
@@ -72,7 +78,7 @@ public class CourseService {
 
     // Method to update a course and its associated domains and topics
     @Transactional
-    public Course updateCourseWithDomainsAndTopics(Long courseId, CourseDTO courseDTO) {
+    public Course updateCourseWithDomainsAndTopics(Long courseId, CourseDTO courseDTO, MultipartFile imageFile) throws IOException {
         // Fetch the existing course by courseId or throw an exception if not found
         Course existingCourse = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
@@ -80,7 +86,11 @@ public class CourseService {
         // Update basic course details
         existingCourse.setCourseName(courseDTO.getCourseName());
         existingCourse.setCourseDescription(courseDTO.getCourseDescription());
-        existingCourse.setImage(courseDTO.getImage());
+
+        // Handle image update: if there's an image file, update it
+        if (imageFile != null && !imageFile.isEmpty()) {
+            existingCourse.setImage(imageFile.getBytes());  // Update the image as byte array
+        }
 
         // Fetch the domains linked to the course
         List<Domain> updatedDomains = new ArrayList<>();
@@ -110,6 +120,7 @@ public class CourseService {
         // Save and return the updated course with its domains and topics
         return courseRepository.save(existingCourse);
     }
+
 
     // Method to get domains by courseId
     public List<Domain> getDomainsByCourse(Long courseId) {

@@ -31,6 +31,7 @@ dependencies {
 
 
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     implementation 'jakarta.validation:jakarta.validation-api:3.0.0' // Use the correct group for Jakarta validation
     implementation 'org.hibernate.validator:hibernate-validator:7.0.0.Final' // Ensure compatibility with Jakarta EE 9+

@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.model.Role;
 import org.springframework.stereotype.Service;
@@ -17,13 +18,12 @@ import java.util.List;
 public class StudentExcelParserService {
 
     // Method to extract student details from an Excel file
-    public List<Users> extractStudentsFromExcel(MultipartFile file, Role studentRole) throws Exception {
+    public List<Users> extractStudentsFromExcel(MultipartFile file, Role studentRole,  Long classesId) throws Exception {
         List<Users> students = new ArrayList<>();
         String defaultPassword = "default123";  // Set default password for students
 
         // Get the input stream from the uploaded Excel file
         try (InputStream inputStream = file.getInputStream()) {
-            // Create a workbook instance for the uploaded file
             Workbook workbook = new XSSFWorkbook(inputStream);
             Sheet sheet = workbook.getSheetAt(0); // Assuming the data is in the first sheet
 
@@ -43,10 +43,11 @@ public class StudentExcelParserService {
                 student.setPassword(defaultPassword); // Default password
                 student.setRole(studentRole); // Assign the role
 
-                // Assign the student role
-                student.setRole(studentRole);
-
                 // Add the student to the list
+                Classes studentClass = new Classes();
+                studentClass.setClassesId(classesId);
+                student.setStudentClass(studentClass);
+
                 students.add(student);
             }
 
