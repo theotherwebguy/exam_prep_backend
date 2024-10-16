@@ -1,13 +1,22 @@
 package org.backend.examprep_backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.backend.examprep_backend.dto.CourseDTO;
+import org.backend.examprep_backend.dto.DomainDTO;
+import org.backend.examprep_backend.dto.TopicDTO;
 import org.backend.examprep_backend.model.Course;
+import org.backend.examprep_backend.model.Domain;
+import org.backend.examprep_backend.model.Topic;
 import org.backend.examprep_backend.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -16,17 +25,36 @@ public class CourseController {
 
     @Autowired
     private CourseService courseService;
-    @PostMapping
-    public ResponseEntity<Course> addCourseWithDomainsAndTopics(@RequestBody CourseDTO courseDTO) {
-        Course savedCourse = courseService.saveCourseWithDomainsAndTopics(courseDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedCourse);
+    @PostMapping(value = "/saveCourse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Course> saveCourseWithImage(
+            @RequestPart("courseDetails") String courseDetailsJson,
+            @RequestPart("image") MultipartFile imageFile) throws IOException {
+
+        // Deserialize courseDetails
+        ObjectMapper objectMapper = new ObjectMapper();
+        CourseDTO courseDTO = objectMapper.readValue(courseDetailsJson, CourseDTO.class);
+
+        Course createdCourse = courseService.saveCourseWithDomainsAndTopics(courseDTO, imageFile);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
     }
 
-    @PutMapping("/{courseId}")
-    public ResponseEntity<Course> updateCourse(@PathVariable Long courseId, @RequestBody CourseDTO courseDTO) {
-        Course updatedCourse = courseService.updateCourseWithDomainsAndTopics(courseId, courseDTO);
+
+    @PutMapping(value = "/{courseId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Course> updateCourseWithImage(
+            @PathVariable Long courseId,
+            @RequestPart("courseDetails") String courseDetailsJson,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
+
+        // Deserialize courseDetails
+        ObjectMapper objectMapper = new ObjectMapper();
+        CourseDTO courseDTO = objectMapper.readValue(courseDetailsJson, CourseDTO.class);
+
+        // Update course with domains, topics, and the image (if provided)
+        Course updatedCourse = courseService.updateCourseWithDomainsAndTopics(courseId, courseDTO, imageFile);
+
         return ResponseEntity.ok(updatedCourse);
     }
+
 
 
 
@@ -38,15 +66,76 @@ public class CourseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Course>> getAllCourses() {
+    public ResponseEntity<List<CourseDTO>> getAllCourses() {
         List<Course> courses = courseService.getAllCourses();
-        return ResponseEntity.ok(courses);
+
+        // Create a list of CourseDTO to return the data in the desired format
+        List<CourseDTO> courseDTOList = new ArrayList<>();
+        for (Course course : courses) {
+            CourseDTO courseDTO = new CourseDTO();
+            courseDTO.setCourseName(course.getCourseName());
+            courseDTO.setCourseDescription(course.getCourseDescription());
+            courseDTO.setImage(course.getImage()); // Handling image as byte[]
+
+            // Add domains and topics to the DTO
+            List<DomainDTO> domainDTOList = new ArrayList<>();
+            for (Domain domain : course.getDomains()) {
+                DomainDTO domainDTO = new DomainDTO();
+                domainDTO.setDomainName(domain.getDomainName());
+                domainDTO.setDomainId(domain.getDomainId());
+
+                List<TopicDTO> topicDTOList = new ArrayList<>();
+                for (Topic topic : domain.getTopics()) {
+                    TopicDTO topicDTO = new TopicDTO();
+                    topicDTO.setTopicName(topic.getTopicName());
+                    topicDTO.setTopicId(topic.getTopicId());
+                    topicDTOList.add(topicDTO);
+                }
+                domainDTO.setTopics(topicDTOList);
+                domainDTOList.add(domainDTO);
+            }
+            courseDTO.setDomains(domainDTOList);
+
+            courseDTOList.add(courseDTO);
+        }
+
+        return ResponseEntity.ok(courseDTOList);
     }
 
+    // Get course by ID
     @GetMapping("/{courseId}")
-    public ResponseEntity<Course> getCourseById(@PathVariable Long courseId) {
+    public ResponseEntity<CourseDTO> getCourseById(@PathVariable Long courseId) {
         Course course = courseService.getCourseById(courseId);
-        return ResponseEntity.ok(course);
+        if (course == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        // Convert Course entity to CourseDTO
+        CourseDTO courseDTO = new CourseDTO();
+        courseDTO.setCourseName(course.getCourseName());
+        courseDTO.setCourseDescription(course.getCourseDescription());
+        courseDTO.setImage(course.getImage()); // Handling image as byte[]
+
+        // Add domains and topics to the DTO
+        List<DomainDTO> domainDTOList = new ArrayList<>();
+        for (Domain domain : course.getDomains()) {
+            DomainDTO domainDTO = new DomainDTO();
+            domainDTO.setDomainName(domain.getDomainName());
+            domainDTO.setDomainId(domain.getDomainId());
+
+            List<TopicDTO> topicDTOList = new ArrayList<>();
+            for (Topic topic : domain.getTopics()) {
+                TopicDTO topicDTO = new TopicDTO();
+                topicDTO.setTopicName(topic.getTopicName());
+                topicDTO.setTopicId(topic.getTopicId());
+                topicDTOList.add(topicDTO);
+            }
+            domainDTO.setTopics(topicDTOList);
+            domainDTOList.add(domainDTO);
+        }
+        courseDTO.setDomains(domainDTOList);
+
+        return ResponseEntity.ok(courseDTO);
     }
 
 }

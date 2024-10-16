@@ -24,13 +24,12 @@ public class Course {
     @Column(columnDefinition = "TEXT")
     private String courseDescription;
 
-    @Column(length = 255)
-    private String image;
+    @Lob
+    @Column(name = "image", nullable = true)
+    private byte[] image;  // Store image as a byte array
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference // This prevents the recursive serialization of the "course" object inside "domains"
     private List<Domain> domains;
 
-//    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-//    private Set<Classes> classes;
 }

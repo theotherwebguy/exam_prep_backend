@@ -6,15 +6,18 @@ import org.backend.examprep_backend.dto.CourseDTO;
 import org.backend.examprep_backend.dto.DomainDTO;
 import org.backend.examprep_backend.dto.TopicDTO;
 import org.backend.examprep_backend.model.*;
-import org.backend.examprep_backend.repository.ClassesRepository;
+import org.backend.examprep_backend.repository.ClassRepository;
 import org.backend.examprep_backend.repository.CourseRepository;
 import org.backend.examprep_backend.repository.DomainRepository;
 import org.backend.examprep_backend.repository.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,25 +30,29 @@ public class CourseService {
     private DomainRepository domainRepository;
 
     @Autowired
-    private ClassesRepository classesRepository;
+    private ClassRepository classRepository;
 
     @Autowired
     private TopicRepository topicRepository;
 
     // Retrieve courses that have classes assigned to the lecturer
     public List<Course> getCoursesWithClassesByLecturer(Users lecturer) {
-        List<Classes> classesList = classesRepository.findByLecturer(lecturer);
+        List<Classes> classesList = classRepository.findByLecturer(lecturer);
         return classesList.stream()
                 .map(Classes::getCourse)
                 .distinct()
                 .collect(Collectors.toList());
     }
 
-    public Course saveCourseWithDomainsAndTopics(CourseDTO courseDTO) {
+    public Course saveCourseWithDomainsAndTopics(CourseDTO courseDTO, MultipartFile imageFile) throws IOException {
         Course course = new Course();
         course.setCourseName(courseDTO.getCourseName());
         course.setCourseDescription(courseDTO.getCourseDescription());
-        course.setImage(courseDTO.getImage());
+
+        // If there's an image file, set it in the course
+        if (imageFile != null && !imageFile.isEmpty()) {
+            course.setImage(imageFile.getBytes());  // Save image as byte array
+        }
 
         List<Domain> domainEntities = new ArrayList<>();
         for (DomainDTO domainDTO : courseDTO.getDomains()) {
@@ -69,37 +76,67 @@ public class CourseService {
         return courseRepository.save(course);  // Cascade save will save everything
     }
 
-    public Course updateCourseWithDomainsAndTopics(Long courseId, CourseDTO courseDTO) {
+    // Method to update a course and its associated domains and topics
+    @Transactional
+    public Course updateCourseWithDomainsAndTopics(Long courseId, CourseDTO courseDTO, MultipartFile imageFile) throws IOException {
+        // Fetch the existing course by courseId or throw an exception if not found
         Course existingCourse = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
 
+        // Update basic course details
         existingCourse.setCourseName(courseDTO.getCourseName());
         existingCourse.setCourseDescription(courseDTO.getCourseDescription());
-        existingCourse.setImage(courseDTO.getImage());
 
+        // Handle image update: if there's an image file, update it
+        if (imageFile != null && !imageFile.isEmpty()) {
+            existingCourse.setImage(imageFile.getBytes());  // Update the image as byte array
+        }
+
+        // Fetch the domains linked to the course
         List<Domain> updatedDomains = new ArrayList<>();
         for (DomainDTO domainDTO : courseDTO.getDomains()) {
             Domain domain = domainRepository.findById(domainDTO.getDomainId())
                     .orElse(new Domain());
             domain.setDomainName(domainDTO.getDomainName());
-            domain.setCourse(existingCourse);  // Set course reference
+            domain.setCourse(existingCourse);  // Set course reference in domain
 
+            // Fetch topics linked to the domain
             List<Topic> updatedTopics = new ArrayList<>();
             for (TopicDTO topicDTO : domainDTO.getTopics()) {
                 Topic topic = topicRepository.findById(topicDTO.getTopicId())
                         .orElse(new Topic());
                 topic.setTopicName(topicDTO.getTopicName());
-                topic.setDomain(domain);  // Set domain reference
+                topic.setDomain(domain);  // Set domain reference in topic
                 updatedTopics.add(topic);
             }
 
-            domain.setTopics(updatedTopics);
-            updatedDomains.add(domain);
+            domain.setTopics(updatedTopics);  // Link topics to domain
+            updatedDomains.add(domain);  // Add domain to updated list
         }
 
+        // Set updated domains in course
         existingCourse.setDomains(updatedDomains);
+
+        // Save and return the updated course with its domains and topics
         return courseRepository.save(existingCourse);
     }
+
+
+    // Method to get domains by courseId
+    public List<Domain> getDomainsByCourse(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        return domainRepository.findByCourse(course);
+    }
+
+    // Method to get topics by domainId
+    public List<Topic> getTopicsByDomain(Long domainId) {
+        Domain domain = domainRepository.findById(domainId)
+                .orElseThrow(() -> new ResourceNotFoundException("Domain not found with id: " + domainId));
+        return topicRepository.findByDomain(domain);
+    }
+
+
 
     public void deleteCourse(Long courseId) {
         Course course = courseRepository.findById(courseId)
