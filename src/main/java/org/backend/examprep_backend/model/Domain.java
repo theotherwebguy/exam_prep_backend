@@ -1,30 +1,27 @@
 package org.backend.examprep_backend.model;
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.util.List;
-@Getter
+
 @Setter
+@Getter
 @Entity
+@Table(name = "domain")
 public class Domain {
+    // Getters and Setters
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long domainId;
+
+    @Column(nullable = false)
+    private String domainName;
 
     @ManyToOne
     @JoinColumn(name = "courseId", nullable = false)
     private Course course;
 
-    @Column(length = 255)
-    private String domainName;
-
-
     @OneToMany(mappedBy = "domain", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Topic> topics; // A domain can have many topics
+    private List<Topic> topics;
 
-    // Getters and Setters
 }
-
-
