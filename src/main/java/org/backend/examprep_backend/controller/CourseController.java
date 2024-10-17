@@ -73,6 +73,7 @@ public class CourseController {
         List<CourseDTO> courseDTOList = new ArrayList<>();
         for (Course course : courses) {
             CourseDTO courseDTO = new CourseDTO();
+            courseDTO.setCourseId(course.getCourseId());
             courseDTO.setCourseName(course.getCourseName());
             courseDTO.setCourseDescription(course.getCourseDescription());
             courseDTO.setImage(course.getImage()); // Handling image as byte[]
