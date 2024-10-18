@@ -27,6 +27,7 @@ public class UserController {
     @Autowired
     private RoleRepository roleRepository;
 
+    // Register
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserDto userDto) {
         try {
@@ -68,6 +69,42 @@ public class UserController {
         }
     }
 
+    // Get all users
+    @GetMapping("/all")
+    public ResponseEntity<List<Users>> getAllUsers() {
+        List<Users> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    // Update user
+    @PutMapping("/update/{userId}")
+    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
+        try {
+            userService.updateUser(userId, userDto);
+            return ResponseEntity.ok("User updated successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again." + e.getMessage());
+        }
+    }
+
+    // Delete user
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        try {
+            userService.deleteUser(userId);
+            return ResponseEntity.ok("User deleted successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again." + e.getMessage());
+        }
+    }
+
+    // Assign Course
     @PostMapping("/{userId}/assignCourses")
     public ResponseEntity<?> assignCourses(@PathVariable Long userId, @RequestBody List<Course> courses) {
         try {
@@ -80,6 +117,7 @@ public class UserController {
                     .body("An unexpected error occurred. Please try again." + e.getMessage());
         }
     }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {

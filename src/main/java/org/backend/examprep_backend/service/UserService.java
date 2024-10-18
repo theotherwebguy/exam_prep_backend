@@ -57,6 +57,44 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    // Gt all users
+    @Transactional(readOnly = true)
+    public List<Users> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    //Update a user
+    @Transactional
+    public void updateUser(Long userId, UserDto userDto) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        user.setEmail(userDto.getEmail());
+        user.setFullNames(userDto.getFullNames());
+        user.setSurname(userDto.getSurname());
+        user.setContactNumber(userDto.getContactNumber());
+        user.setTitle(userDto.getTitle());
+
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        }
+
+        Role role = roleRepository.findByName(userDto.getRole())
+                .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+        user.setRole(role);
+
+        userRepository.save(user);
+    }
+
+    //Delete a user
+    @Transactional
+    public void deleteUser(Long userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        userRepository.delete(user);
+    }
+
+
     // Find a user by email or contact number
     @Transactional(readOnly = true)
     public Optional<Users> findUserByEmailOrContactNumber(String email, String contactNumber) {
