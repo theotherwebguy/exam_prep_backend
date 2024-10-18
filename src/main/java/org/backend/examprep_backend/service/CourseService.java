@@ -103,7 +103,6 @@ public class CourseService {
                     .orElse(new Domain());
             domain.setDomainName(domainDTO.getDomainName());
             domain.setCourse(existingCourse);  // Set course reference in domain
-
             List<Topic> updatedTopics = new ArrayList<>();
             for (TopicDTO topicDTO : domainDTO.getTopics()) {
                 Topic topic = topicRepository.findById(topicDTO.getTopicId())
