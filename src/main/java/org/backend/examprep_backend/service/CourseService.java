@@ -79,20 +79,24 @@ public class CourseService {
     // Method to update a course and its associated domains and topics
     @Transactional
     public Course updateCourseWithDomainsAndTopics(Long courseId, CourseDTO courseDTO, MultipartFile imageFile) throws IOException {
-        // Fetch the existing course by courseId or throw an exception if not found
+
+        // Check if courseId is valid
+        if (courseId == null) {
+            throw new IllegalArgumentException("The course ID must not be null.");
+        }
+
         Course existingCourse = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
 
-        // Update basic course details
         existingCourse.setCourseName(courseDTO.getCourseName());
         existingCourse.setCourseDescription(courseDTO.getCourseDescription());
 
-        // Handle image update: if there's an image file, update it
         if (imageFile != null && !imageFile.isEmpty()) {
-            existingCourse.setImage(imageFile.getBytes());  // Update the image as byte array
+            System.out.println("Image file received: " + imageFile.getOriginalFilename());
+            byte[] imageData = imageFile.getBytes();
+            existingCourse.setImage(imageData);
         }
 
-        // Fetch the domains linked to the course
         List<Domain> updatedDomains = new ArrayList<>();
         for (DomainDTO domainDTO : courseDTO.getDomains()) {
             Domain domain = domainRepository.findById(domainDTO.getDomainId())
@@ -100,7 +104,6 @@ public class CourseService {
             domain.setDomainName(domainDTO.getDomainName());
             domain.setCourse(existingCourse);  // Set course reference in domain
 
-            // Fetch topics linked to the domain
             List<Topic> updatedTopics = new ArrayList<>();
             for (TopicDTO topicDTO : domainDTO.getTopics()) {
                 Topic topic = topicRepository.findById(topicDTO.getTopicId())

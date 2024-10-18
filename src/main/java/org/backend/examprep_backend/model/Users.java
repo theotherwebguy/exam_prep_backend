@@ -51,7 +51,7 @@ public class Users {
     // Use ManyToOne for a single Role
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
-//    @NotNull(message = "User must have a role")
+    @NotNull(message = "User must have a role")
     private Role role;
 
     @ManyToMany

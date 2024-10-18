@@ -1,6 +1,7 @@
 package org.backend.examprep_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.backend.examprep_backend.dto.CourseDTO;
 import org.backend.examprep_backend.dto.DomainDTO;
 import org.backend.examprep_backend.dto.TopicDTO;
@@ -45,11 +46,11 @@ public class CourseController {
             @RequestPart("courseDetails") String courseDetailsJson,
             @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
 
-        // Deserialize courseDetails
         ObjectMapper objectMapper = new ObjectMapper();
         CourseDTO courseDTO = objectMapper.readValue(courseDetailsJson, CourseDTO.class);
 
-        // Update course with domains, topics, and the image (if provided)
+        
+
         Course updatedCourse = courseService.updateCourseWithDomainsAndTopics(courseId, courseDTO, imageFile);
 
         return ResponseEntity.ok(updatedCourse);
