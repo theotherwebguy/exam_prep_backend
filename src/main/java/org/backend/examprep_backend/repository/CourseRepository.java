@@ -5,6 +5,7 @@ import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,6 +17,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findCourseWithClasses();
 
     @Query("SELECT c FROM Course c LEFT JOIN FETCH c.classes WHERE c.courseId = :courseId")
-    Optional<Course> findCourseWithClasses(Long courseId);
+    Optional<Course> findCourseWithClasses(@Param("courseId") Long courseId);
 }
 

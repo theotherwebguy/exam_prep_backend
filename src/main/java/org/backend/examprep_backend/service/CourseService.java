@@ -188,6 +188,44 @@ public class CourseService {
         }).collect(Collectors.toList());
     }
 
+    @Transactional
+    public CourseWithClassesDTO getCourseWithClassesDTOUsingID(Long courseId) {
+        // Find the course by courseId
+        Course course = courseRepository.findCourseWithClasses(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id " + courseId));
+
+        // Map Course to CourseWithClassesDTO
+        CourseWithClassesDTO dto = new CourseWithClassesDTO();
+        dto.setCourseId(course.getCourseId());
+        dto.setCourseName(course.getCourseName());
+        dto.setImage(course.getImage());
+        dto.setCourseDescription(course.getCourseDescription());
+
+        // Map each Class to ClassDTO
+        List<ClassDTO> classDTOs = course.getClasses().stream().map(cls -> {
+            ClassDTO classDTO = new ClassDTO();
+            classDTO.setClassesId(cls.getClassesId());
+            classDTO.setClassName(cls.getClassName());
+
+            // Set optional fields if not null
+            classDTO.setClassDescription(cls.getClassDescription());
+            classDTO.setStartDate(cls.getStartDate());
+            classDTO.setEndDate(cls.getEndDate());
+
+            // Set lecturer details
+            if (cls.getLecturer() != null) {
+                classDTO.setUserId(cls.getLecturer().getId()); // Assuming you have this method
+                classDTO.setLecturerName(cls.getLecturer().getFullNames());
+                classDTO.setLecturerEmail(cls.getLecturer().getEmail());
+            }
+
+            return classDTO;
+        }).collect(Collectors.toList());
+
+        dto.setClasses(classDTOs);
+        return dto;
+    }
+
 
 
 
