@@ -60,17 +60,17 @@ public class ClassController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<Classes>> getAllClasses() {
-        List<Classes> classes = classService.getAllClasses();
-        return ResponseEntity.ok(classes);
-    }
+//    @GetMapping
+//    public ResponseEntity<List<Classes>> getAllClasses() {
+//        List<Classes> classes = classService.getAllClasses();
+//        return ResponseEntity.ok(classes);
+//    }
 
-    @GetMapping("/course/{courseId}")
-    public ResponseEntity<List<Classes>> getClassesByCourseId(@PathVariable Long courseId) {
-        List<Classes> classes = classService.getClassesByCourseId(courseId);
-        return ResponseEntity.ok(classes);
-    }
+//    @GetMapping("/course/{courseId}")
+//    public ResponseEntity<List<Classes>> getClassesByCourseId(@PathVariable Long courseId) {
+//        List<Classes> classes = classService.getClassesByCourseId(courseId);
+//        return ResponseEntity.ok(classes);
+//    }
 
     @GetMapping("/{classId}")
     public ResponseEntity<Classes> getClassById(@PathVariable Long classId) {
