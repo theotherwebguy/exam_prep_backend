@@ -89,7 +89,8 @@ public class CourseService {
 
         // Handle image update: if there's an image file, update it
         if (imageFile != null && !imageFile.isEmpty()) {
-            existingCourse.setImage(imageFile.getBytes());  // Update the image as byte array
+            byte[] imageBytes = imageFile.getBytes();
+            existingCourse.setImage(imageBytes);  // Update the image as byte array
         }
 
         // Fetch the domains linked to the course
