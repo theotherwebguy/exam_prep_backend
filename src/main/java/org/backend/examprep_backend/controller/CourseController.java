@@ -113,6 +113,7 @@ public class CourseController {
 
         // Convert Course entity to CourseDTO
         CourseDTO courseDTO = new CourseDTO();
+        courseDTO.setCourseId(course.getCourseId());
         courseDTO.setCourseName(course.getCourseName());
         courseDTO.setCourseDescription(course.getCourseDescription());
         courseDTO.setImage(course.getImage()); // Handling image as byte[]
