@@ -2,9 +2,7 @@ package org.backend.examprep_backend.service;
 
 import jakarta.transaction.Transactional;
 import org.backend.examprep_backend.ResourceNotFoundException;
-import org.backend.examprep_backend.dto.CourseDTO;
-import org.backend.examprep_backend.dto.DomainDTO;
-import org.backend.examprep_backend.dto.TopicDTO;
+import org.backend.examprep_backend.dto.*;
 import org.backend.examprep_backend.model.*;
 import org.backend.examprep_backend.repository.ClassRepository;
 import org.backend.examprep_backend.repository.CourseRepository;
@@ -79,29 +77,30 @@ public class CourseService {
     // Method to update a course and its associated domains and topics
     @Transactional
     public Course updateCourseWithDomainsAndTopics(Long courseId, CourseDTO courseDTO, MultipartFile imageFile) throws IOException {
-        // Fetch the existing course by courseId or throw an exception if not found
+
+        // Check if courseId is valid
+        if (courseId == null) {
+            throw new IllegalArgumentException("The course ID must not be null.");
+        }
+
         Course existingCourse = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
 
-        // Update basic course details
         existingCourse.setCourseName(courseDTO.getCourseName());
         existingCourse.setCourseDescription(courseDTO.getCourseDescription());
 
-        // Handle image update: if there's an image file, update it
         if (imageFile != null && !imageFile.isEmpty()) {
-            byte[] imageBytes = imageFile.getBytes();
-            existingCourse.setImage(imageBytes);  // Update the image as byte array
+            System.out.println("Image file received: " + imageFile.getOriginalFilename());
+            byte[] imageData = imageFile.getBytes();
+            existingCourse.setImage(imageData);
         }
 
-        // Fetch the domains linked to the course
         List<Domain> updatedDomains = new ArrayList<>();
         for (DomainDTO domainDTO : courseDTO.getDomains()) {
             Domain domain = domainRepository.findById(domainDTO.getDomainId())
                     .orElse(new Domain());
             domain.setDomainName(domainDTO.getDomainName());
             domain.setCourse(existingCourse);  // Set course reference in domain
-
-            // Fetch topics linked to the domain
             List<Topic> updatedTopics = new ArrayList<>();
             for (TopicDTO topicDTO : domainDTO.getTopics()) {
                 Topic topic = topicRepository.findById(topicDTO.getTopicId())
@@ -153,6 +152,38 @@ public class CourseService {
         return courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
     }
+    @Transactional
+    public List<CourseWithClassesDTO> getAllCoursesWithClassesDTO() {
+        List<Course> courses = courseRepository.findCourseWithClasses();
+
+        return courses.stream().map(course -> {
+            // Map Course to CourseWithClassesDTO
+            CourseWithClassesDTO dto = new CourseWithClassesDTO();
+            dto.setCourseId(course.getCourseId());
+            dto.setCourseName(course.getCourseName());
+            dto.setImage(course.getImage());
+            dto.setCourseDescription(course.getCourseDescription());
+
+            // Map each Class to ClassDTO
+            List<ClassDTO> classDTOs = course.getClasses().stream().map(cls -> {
+                ClassDTO classDTO = new ClassDTO();
+                classDTO.setClassesId(cls.getClassesId());
+                classDTO.setClassName(cls.getClassName());
+
+                // Set optional fields if not null
+                classDTO.setClassDescription(cls.getClassDescription());
+                classDTO.setStartDate(cls.getStartDate());
+                classDTO.setEndDate(cls.getEndDate());
+                classDTO.setUserId(cls.getLecturer() != null ? cls.getLecturer().getId() : null); // Use getLecturer() here
+
+                return classDTO;
+            }).collect(Collectors.toList());
+
+            dto.setClasses(classDTOs);
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
 
 
 
