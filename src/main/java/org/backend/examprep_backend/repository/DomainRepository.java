@@ -9,5 +9,6 @@ import java.util.List;
 
 @Repository
 public interface DomainRepository extends JpaRepository<Domain, Long> {
-    List<Domain> findByCourse(Course course);  // Fetch domains related to a course
+    List<Domain> findByCourse(Course course);
+    // Fetch domains related to a course
 }
