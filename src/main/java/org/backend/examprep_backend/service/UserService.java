@@ -1,5 +1,7 @@
 package org.backend.examprep_backend.service;
 
+import org.backend.examprep_backend.ResourceNotFoundException;
+import org.backend.examprep_backend.repository.CourseRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -16,11 +18,13 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
+    private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -47,6 +51,14 @@ public class UserService {
 
         user.setRole(role); // Assign the fetched role to the user
 
+        // Fetch and assign courses based on courseIds
+        Set<Course> courses = new HashSet<>();
+        for (Long courseId : userDto.getCourseIds()) {
+            Course course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+            courses.add(course);
+        }
+        user.setCourses(courses);  // Set the user's courses
         // Save the user to the database
         return userRepository.save(user);
     }
