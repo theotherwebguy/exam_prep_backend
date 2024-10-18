@@ -5,6 +5,9 @@ import lombok.Setter;
 import org.apache.catalina.User;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -29,5 +32,8 @@ public class Classes {
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
     private Users lecturer;
+
+    @OneToMany(mappedBy = "studentClass", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Users> students = new ArrayList<>();
 
 }
