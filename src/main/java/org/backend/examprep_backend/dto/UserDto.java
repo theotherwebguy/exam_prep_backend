@@ -1,11 +1,11 @@
 package org.backend.examprep_backend.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
+@NoArgsConstructor
 public class UserDto {
 
     @NotBlank(message = "Email is required")
