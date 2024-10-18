@@ -145,4 +145,10 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
+    @GetMapping("/courses/{courseId}")
+    public ResponseEntity<CourseWithClassesDTO> getCourseWithClasses(@PathVariable Long courseId) {
+        CourseWithClassesDTO courseWithClasses = courseService.getCourseWithClassesDTOUsingID(courseId);
+        return ResponseEntity.ok(courseWithClasses);
+    }
+
 }
