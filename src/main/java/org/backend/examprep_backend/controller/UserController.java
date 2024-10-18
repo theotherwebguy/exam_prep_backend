@@ -14,6 +14,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,9 +31,31 @@ public class UserController {
     private RoleRepository roleRepository;
 
     // Register
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody UserDto userDto) {
+    @PostMapping(value = "/register", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserDto userDto, @RequestPart("image") MultipartFile image) {
         try {
+            // Ensure image is not null and not empty
+            // Define allowed image types and max size
+            List<String> allowedMimeTypes = Arrays.asList("image/jpeg", "image/png", "image/gif");
+            long maxSize = 5 * 1024 * 1024; // 5MB
+
+            // Ensure image is not null and not empty
+            if (image != null && !image.isEmpty()) {
+                // Validate image type
+                String mimeType = image.getContentType();
+                if (!allowedMimeTypes.contains(mimeType)) {
+                    return ResponseEntity.badRequest().body("Error: Invalid image type. Only JPEG, PNG, and GIF are allowed.");
+                }
+
+                // Validate image size
+                if (image.getSize() > maxSize) {
+                    return ResponseEntity.badRequest().body("Error: Image size exceeds the maximum limit of 5MB.");
+                }
+
+                // Convert the image to byte[] and set it
+                userDto.setProfileImage(image.getBytes());
+            }
+
             // Ensure role is set before saving
             if (userDto.getRole() == null || userDto.getRole().isEmpty()) {
                 return ResponseEntity.badRequest().body("Error: User must have a role.");
@@ -67,6 +92,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred. Please try again." + e.getMessage());
         }
+
     }
 
     // Get all users

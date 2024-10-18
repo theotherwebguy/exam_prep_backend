@@ -48,6 +48,11 @@ public class Users {
     @Column(nullable = false, unique = true)
     private String contactNumber;
 
+    // Field for storing user profile image as byte[]
+    @Lob // Specifies that this is a large object (for storing binary data)
+    @Column(name = "profile_image")
+    private byte[] profileImage;
+
     // Use ManyToOne for a single Role
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)

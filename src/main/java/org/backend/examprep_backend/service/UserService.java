@@ -36,6 +36,7 @@ public class UserService {
                 .fullNames(userDto.getFullNames())
                 .surname(userDto.getSurname())
                 .contactNumber(userDto.getContactNumber())
+                .profileImage(userDto.getProfileImage())
                 .build();
 
         // Hash the user's password before saving
