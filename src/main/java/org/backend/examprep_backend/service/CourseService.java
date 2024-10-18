@@ -121,7 +121,6 @@ public class CourseService {
         return courseRepository.save(existingCourse);
     }
 
-
     // Method to get domains by courseId
     public List<Domain> getDomainsByCourse(Long courseId) {
         Course course = courseRepository.findById(courseId)
@@ -174,7 +173,12 @@ public class CourseService {
                 classDTO.setClassDescription(cls.getClassDescription());
                 classDTO.setStartDate(cls.getStartDate());
                 classDTO.setEndDate(cls.getEndDate());
-                classDTO.setUserId(cls.getLecturer() != null ? cls.getLecturer().getId() : null); // Use getLecturer() here
+                //classDTO.setUserId(cls.getLecturer() != null ? cls.getLecturer().getId() : null); // Use getLecturer() here
+
+                if (cls.getLecturer() != null) {
+                    classDTO.setLecturerName(cls.getLecturer().getFullNames()); // Adjust to your User class
+                    classDTO.setLecturerEmail(cls.getLecturer().getEmail()); // Adjust to your User class
+                }
 
                 return classDTO;
             }).collect(Collectors.toList());
