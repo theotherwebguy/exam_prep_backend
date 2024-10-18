@@ -2,9 +2,7 @@ package org.backend.examprep_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import org.backend.examprep_backend.dto.CourseDTO;
-import org.backend.examprep_backend.dto.DomainDTO;
-import org.backend.examprep_backend.dto.TopicDTO;
+import org.backend.examprep_backend.dto.*;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Domain;
 import org.backend.examprep_backend.model.Topic;
@@ -49,7 +47,7 @@ public class CourseController {
         ObjectMapper objectMapper = new ObjectMapper();
         CourseDTO courseDTO = objectMapper.readValue(courseDetailsJson, CourseDTO.class);
 
-        
+
 
         Course updatedCourse = courseService.updateCourseWithDomainsAndTopics(courseId, courseDTO, imageFile);
 
@@ -139,6 +137,12 @@ public class CourseController {
         courseDTO.setDomains(domainDTOList);
 
         return ResponseEntity.ok(courseDTO);
+    }
+
+    @GetMapping("/with-classes")
+    public ResponseEntity<List<CourseWithClassesDTO>> getCoursesWithClasses() {
+        List<CourseWithClassesDTO> courses = courseService.getAllCoursesWithClassesDTO();
+        return ResponseEntity.ok(courses);
     }
 
 }
