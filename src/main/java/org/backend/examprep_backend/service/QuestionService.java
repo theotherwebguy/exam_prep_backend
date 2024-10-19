@@ -2,14 +2,13 @@ package org.backend.examprep_backend.service;
 
 import org.backend.examprep_backend.dto.AnswerDTO;
 import org.backend.examprep_backend.dto.QuestionDTO;
-import org.backend.examprep_backend.model.Answer;
-import org.backend.examprep_backend.model.Question;
-import org.backend.examprep_backend.model.Topic;
+import org.backend.examprep_backend.model.*;
+import org.backend.examprep_backend.repository.CourseRepository;
+import org.backend.examprep_backend.repository.DomainRepository;
 import org.backend.examprep_backend.repository.TopicRepository;
 import org.backend.examprep_backend.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,31 +22,49 @@ public class QuestionService {
     @Autowired
     private TopicRepository topicRepository;
 
+    @Autowired
+    private DomainRepository domainRepository;
+
+    @Autowired
+    private CourseRepository courseRepository;
+
     public void addQuestion(QuestionDTO questionDTO) {
-        // Find the topic by ID
+        // Validate the course
+        Optional<Course> optionalCourse = courseRepository.findById(questionDTO.getCourseId());
+        if (optionalCourse.isEmpty()) {
+            throw new RuntimeException("Course not found");
+        }
+
+        // Validate the domain
+        Optional<Domain> optionalDomain = domainRepository.findById(questionDTO.getDomainId());
+        if (optionalDomain.isEmpty()) {
+            throw new RuntimeException("Domain not found under this course");
+        }
+
+        // Validate the topic
         Optional<Topic> optionalTopic = topicRepository.findById(questionDTO.getTopicId());
         if (optionalTopic.isEmpty()) {
-            throw new RuntimeException("Topic not found");
+            throw new RuntimeException("Topic not found under this domain");
         }
+
         Topic topic = optionalTopic.get();
 
         // Create a new Question and associate it with the topic
         Question question = new Question();
         question.setQuestionText(questionDTO.getQuestionText());
-        question.setTopic(topic);  // Ensure this works
+        question.setTopic(topic);
 
-        // Create and associate the answers
+        // Add answers
         List<Answer> answers = new ArrayList<>();
         for (AnswerDTO answerDTO : questionDTO.getAnswers()) {
             Answer answer = new Answer();
             answer.setAnswerText(answerDTO.getAnswerText());
-            answer.setAnswerDescription(answerDTO.getAnswerDescription());
             answer.setCorrect(answerDTO.isCorrect());
+            answer.setAnswerDescription(questionDTO.getAnswerDescription());
             answer.setQuestion(question);
             answers.add(answer);
         }
 
-        // Save the question along with answers
         question.setAnswers(answers);
         questionRepository.save(question);
     }
