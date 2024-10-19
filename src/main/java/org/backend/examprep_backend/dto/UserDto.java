@@ -3,9 +3,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
-@Builder
+@NoArgsConstructor
 public class UserDto {
 
     @NotBlank(message = "Email is required")
@@ -27,4 +30,10 @@ public class UserDto {
 
     @NotBlank(message = "Role is required")
     private String role;
+ 
+    // Field for handling profile image
+    private byte[] profileImage;
+
+    private List<Long> courseIds;
+
 }
