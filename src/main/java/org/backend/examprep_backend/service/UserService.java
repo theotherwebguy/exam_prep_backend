@@ -31,17 +31,16 @@ public class UserService {
 
     // Register a new user using UserDto
     @Transactional
-    public Users registerUser(UserDto userDto) {
+    public Users registerUser(UserDto userDto,  byte[] profileImage) {
         // Create a new Users entity from UserDto
-        Users user = Users.builder()
-                .email(userDto.getEmail())
-                .password(userDto.getPassword())
-                .title(userDto.getTitle())
-                .fullNames(userDto.getFullNames())
-                .surname(userDto.getSurname())
-                .contactNumber(userDto.getContactNumber())
-                .profileImage(userDto.getProfileImage())
-                .build();
+        Users user = new Users();
+        user.setEmail(userDto.getEmail());
+        user.setPassword(userDto.getPassword());
+        user.setTitle(userDto.getTitle());
+        user.setFullNames(userDto.getFullNames());
+        user.setSurname(userDto.getSurname());
+        user.setContactNumber(userDto.getContactNumber());
+        user.setProfileImage(profileImage);
 
         // Hash the user's password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
