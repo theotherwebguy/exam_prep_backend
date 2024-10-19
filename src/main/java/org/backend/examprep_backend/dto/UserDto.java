@@ -11,6 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 public class UserDto {
 
+    private  Long id;
+
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
@@ -32,4 +34,10 @@ public class UserDto {
     private String role;
 
     private List<Long> courseIds;
+
+    public UserDto(Long id, String fullNames, String email) {
+        this.id = id;
+        this.fullNames = fullNames;
+        this.email = email;
+    }
 }
