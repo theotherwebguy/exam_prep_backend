@@ -6,6 +6,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.backend.examprep_backend.InvalidRoleException;
 import org.backend.examprep_backend.ResourceNotFoundException;
 import org.backend.examprep_backend.dto.ClassDTO;
+import org.backend.examprep_backend.dto.ClassResponseDTO;
+import org.backend.examprep_backend.dto.CourseResponseDTO;
+import org.backend.examprep_backend.dto.StudentResponseDTO;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.model.Course;
@@ -21,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ClassService {
@@ -85,75 +89,46 @@ public class ClassService {
         // Return the newly created class
         return createdClass;
     }
+@Transactional
+    public List<ClassResponseDTO> getAllClassesWithStudents() {
+        List<Classes> classEntities = classRepository.findAll();
 
-    public List<Classes> getAllClasses() {
-        return classRepository.findAll();
+        // Map classes to DTOs
+        return classEntities.stream()
+                .map(this::mapToClassResponseDTO)
+                .toList();
     }
+    private ClassResponseDTO mapToClassResponseDTO(Classes classes) {
+        ClassResponseDTO dto = new ClassResponseDTO();
+        dto.setClassId(classes.getClassesId());
+        dto.setClassName(classes.getClassName());
+        dto.setClassDescription(classes.getClassDescription());
 
-    public List<Classes> getClassesByCourseId(Long courseId) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
-        return classRepository.findByCourse(course);
-    }
-
-    public Classes getClassById(Long classId) {
-        return classRepository.findById(classId)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
-    }
-    @Transactional
-    public Classes updateClass(Long classId, ClassDTO classDTO) {
-        // Find the class by ID
-        Classes existingClass = classRepository.findById(classId)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
-
-        // Update the class details
-        existingClass.setClassName(classDTO.getClassName());
-        existingClass.setClassDescription(classDTO.getClassDescription());
-        existingClass.setStartDate(classDTO.getStartDate());
-        existingClass.setEndDate(classDTO.getEndDate());
-
-        // If the lecturer is being updated, fetch the lecturer and validate their role
-        if (classDTO.getUserId() != null) {
-            Users lecturer = userRepository.findById(classDTO.getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + classDTO.getUserId()));
-
-            if (!lecturer.getRole().getName().equalsIgnoreCase("Lecturer")) {
-                throw new InvalidRoleException("User is not a Lecturer");
-            }
-
-            existingClass.setLecturer(lecturer);
+        // Map students to StudentResponseDTO
+        List<StudentResponseDTO> studentDTOs = classes.getStudents().stream()
+                .map(this::mapToStudentResponseDTO)
+                .toList();
+        dto.setStudents(studentDTOs);
+// Map the course information
+        if (classes.getCourse() != null) {
+            CourseResponseDTO courseDTO = new CourseResponseDTO();
+            courseDTO.setCourseId(classes.getCourse().getCourseId());
+            courseDTO.setCourseName(classes.getCourse().getCourseName());
+            courseDTO.setCourseDescription(classes.getCourse().getCourseDescription());
+            dto.setCourse(courseDTO);
         }
 
-        // Save the updated class
-        Classes savedClass = classRepository.save(existingClass);
-
-        // Populate the DTO with the updated data, including the course name
-        ClassDTO updatedClassDTO = new ClassDTO();
-        updatedClassDTO.setClassesId(savedClass.getClassesId());
-        updatedClassDTO.setClassName(savedClass.getClassName());
-        updatedClassDTO.setClassDescription(savedClass.getClassDescription());
-        updatedClassDTO.setStartDate(savedClass.getStartDate());
-        updatedClassDTO.setEndDate(savedClass.getEndDate());
-
-        if (savedClass.getLecturer() != null) {
-            updatedClassDTO.setUserId(savedClass.getLecturer().getId());
-            updatedClassDTO.setLecturerName(savedClass.getLecturer().getFullNames());
-        }
-
-        if (savedClass.getCourse() != null) {
-            updatedClassDTO.setCourseName(savedClass.getCourse().getCourseName()); // Fetch course name
-        }
-
-        return savedClass;
+        return dto;
     }
-    public void deleteClass(Long classId) {
-        // Check if the class exists before deleting
-        Classes classToDelete = classRepository.findById(classId)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
-
-        // Delete the class
-        classRepository.delete(classToDelete);
+    private StudentResponseDTO mapToStudentResponseDTO(Users student) {
+        StudentResponseDTO dto = new StudentResponseDTO();
+        dto.setStudentId(student.getId());
+        dto.setFullName(student.getFullNames());
+        dto.setEmail(student.getEmail());
+        dto.setContactNumber(student.getContactNumber());
+        return dto;
     }
+
 
 
 }
