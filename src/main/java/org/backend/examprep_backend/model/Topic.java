@@ -1,9 +1,11 @@
 package org.backend.examprep_backend.model;
+
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "topic")
 public class Topic {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long topicId;
@@ -12,7 +14,7 @@ public class Topic {
     private String topicName;
 
     @ManyToOne
-    @JoinColumn(name = "domainId", nullable = false)
+    @JoinColumn(name = "domainId", nullable = false) // Make sure this column exists in your database
     private Domain domain;
 
     // Getters and Setters

@@ -14,6 +14,11 @@ public class Question {
     @Column(columnDefinition = "text", nullable = false)
     private String questionText;
 
+    // New ManyToOne relationship with Topic
+    @ManyToOne
+    @JoinColumn(name = "topic_id", nullable = false)
+    private Topic topic;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Answer> answers;
 
@@ -32,6 +37,14 @@ public class Question {
 
     public void setQuestionText(String questionText) {
         this.questionText = questionText;
+    }
+
+    public Topic getTopic() {
+        return topic;
+    }
+
+    public void setTopic(Topic topic) {
+        this.topic = topic;
     }
 
     public List<Answer> getAnswers() {

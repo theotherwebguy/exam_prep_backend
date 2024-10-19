@@ -1,25 +1,16 @@
 package org.backend.examprep_backend.dto;
-
+import lombok.Getter;
+import lombok.Setter;
 import java.util.List;
 
 public class QuestionDTO {
+
+    @Getter @Setter
     private String questionText;
+
+    @Getter @Setter
+    private Long topicId;  // Topic ID reference
+
+    @Getter @Setter
     private List<AnswerDTO> answers;
-
-    // Getters and Setters
-    public String getQuestionText() {
-        return questionText;
-    }
-
-    public void setQuestionText(String questionText) {
-        this.questionText = questionText;
-    }
-
-    public List<AnswerDTO> getAnswers() {
-        return answers;
-    }
-
-    public void setAnswers(List<AnswerDTO> answers) {
-        this.answers = answers;
-    }
 }

@@ -1,7 +1,9 @@
 package org.backend.examprep_backend.model;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.util.List;
 
 @Setter
@@ -9,7 +11,6 @@ import java.util.List;
 @Entity
 @Table(name = "domain")
 public class Domain {
-    // Getters and Setters
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long domainId;
@@ -23,5 +24,4 @@ public class Domain {
 
     @OneToMany(mappedBy = "domain", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Topic> topics;
-
 }
