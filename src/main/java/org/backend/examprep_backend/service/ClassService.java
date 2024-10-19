@@ -41,7 +41,6 @@ public class ClassService {
     @Autowired
     private RoleRepository roleRepository;
 
-    // Method to add class and upload students from an Excel file in a single call
     public Classes addClassAndStudents(Long courseId, ClassDTO classDTO, MultipartFile file) throws Exception {
         // Step 1: Create the class
         Course course = courseRepository.findById(courseId)
@@ -70,7 +69,7 @@ public class ClassService {
 
         // Step 2: Parse the uploaded Excel file for students and associate them with the class
         if (file != null && !file.isEmpty()) {
-            Optional<Role> studentRoleOpt = roleRepository.findById(1L);  // Assuming role ID for student is 1
+            Optional<Role> studentRoleOpt = roleRepository.findByName("STUDENT");  // Assuming role ID for student is 1
             if (studentRoleOpt.isEmpty()) {
                 throw new ResourceNotFoundException("Student role not found");
             }
@@ -126,7 +125,26 @@ public class ClassService {
         }
 
         // Save the updated class
-        return classRepository.save(existingClass);
+        Classes savedClass = classRepository.save(existingClass);
+
+        // Populate the DTO with the updated data, including the course name
+        ClassDTO updatedClassDTO = new ClassDTO();
+        updatedClassDTO.setClassesId(savedClass.getClassesId());
+        updatedClassDTO.setClassName(savedClass.getClassName());
+        updatedClassDTO.setClassDescription(savedClass.getClassDescription());
+        updatedClassDTO.setStartDate(savedClass.getStartDate());
+        updatedClassDTO.setEndDate(savedClass.getEndDate());
+
+        if (savedClass.getLecturer() != null) {
+            updatedClassDTO.setUserId(savedClass.getLecturer().getId());
+            updatedClassDTO.setLecturerName(savedClass.getLecturer().getFullNames());
+        }
+
+        if (savedClass.getCourse() != null) {
+            updatedClassDTO.setCourseName(savedClass.getCourse().getCourseName()); // Fetch course name
+        }
+
+        return savedClass;
     }
     public void deleteClass(Long classId) {
         // Check if the class exists before deleting

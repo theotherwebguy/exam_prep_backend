@@ -31,6 +31,7 @@ public class ClassDTO {
     @NotNull
     private Long userId;  // Lecturer responsible for the class
 
+    private String courseName; // New field for the course name
     private String lecturerName; // Add lecturer name
     private String lecturerEmail; // Add lecturer email
 
