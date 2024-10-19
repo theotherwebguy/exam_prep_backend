@@ -7,6 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
+@Table(name = "topic")
 public class Topic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,9 +17,5 @@ public class Topic {
     @JoinColumn(name = "domain_id", nullable = false)
     @JsonBackReference
     private Domain domain;
-
     private String topicName;
-
-    // Getters and Setters
 }
-
