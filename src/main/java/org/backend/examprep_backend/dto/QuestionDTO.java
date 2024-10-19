@@ -9,7 +9,16 @@ public class QuestionDTO {
     private String questionText;
 
     @Getter @Setter
-    private Long topicId;  // Topic ID reference
+    private Long courseId;
+
+    @Getter @Setter
+    private Long domainId;
+
+    @Getter @Setter
+    private Long topicId;
+
+    @Getter @Setter
+    private String answerDescription;
 
     @Getter @Setter
     private List<AnswerDTO> answers;
