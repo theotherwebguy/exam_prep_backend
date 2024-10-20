@@ -42,8 +42,9 @@ public class ClassService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Transactional
     public Classes addClassAndStudents(Long courseId, ClassDTO classDTO, MultipartFile file) throws Exception {
-        // Step 1: Create the class
+        // Step 1: Fetch course by ID
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
 
@@ -56,7 +57,7 @@ public class ClassService {
             throw new InvalidRoleException("User is not a Lecturer");
         }
 
-        // Create and populate the class entity
+        // Step 3: Create the class entity
         Classes newClass = new Classes();
         newClass.setClassName(classDTO.getClassName());
         newClass.setClassDescription(classDTO.getClassDescription());
@@ -65,10 +66,9 @@ public class ClassService {
         newClass.setCourse(course);
         newClass.setLecturer(lecturer);
 
-        // Save the class to the database
-        Classes createdClass = classRepository.save(newClass);
+        Classes createdClass = classRepository.save(newClass); // Save class
 
-        // Step 2: Parse the uploaded Excel file for students and associate them with the class
+        // Step 4: Parse students from Excel and associate with class
         if (file != null && !file.isEmpty()) {
             Optional<Role> studentRoleOpt = roleRepository.findByName("STUDENT");  // Assuming role ID for student is 1
             if (studentRoleOpt.isEmpty()) {
@@ -77,10 +77,14 @@ public class ClassService {
 
             // Extract students from the Excel file and link them to the created class
             Role studentRole = studentRoleOpt.get();
-            List<Users> students = studentExcelParserService.extractStudentsFromExcel(file, studentRole, createdClass.getClassesId());
-
-            // Save the students in the database
-            userRepository.saveAll(students);
+            try {
+                // Extract students from Excel and link to the class
+                List<Users> students = studentExcelParserService.extractStudentsFromExcel(file, studentRole, createdClass.getClassesId());
+                userRepository.saveAll(students);
+            } catch (Exception e) {
+                // Handle parsing exceptions by throwing a specific error
+                throw new Exception("Failed to parse students from Excel: " + e.getMessage(), e);
+            }
         }
 
         // Return the newly created class
