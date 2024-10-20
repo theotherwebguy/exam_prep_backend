@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.backend.examprep_backend.ResourceNotFoundException;
 import org.backend.examprep_backend.dto.ClassDTO;
+import org.backend.examprep_backend.dto.ClassRequestDTO;
 import org.backend.examprep_backend.dto.ClassResponseDTO;
 import org.backend.examprep_backend.dto.UserDto;
 import org.backend.examprep_backend.model.Classes;
@@ -129,6 +130,29 @@ public class ClassController {
     public ResponseEntity<List<ClassResponseDTO>> getAllClassesWithStudents() {
         List<ClassResponseDTO> classes = classService.getAllClassesWithStudents();
         return ResponseEntity.ok(classes);
+    }
+
+    @GetMapping("/with-students/{classId}")
+    public ResponseEntity<ClassResponseDTO> getClassWithStudentsById(@PathVariable Long classId) {
+        ClassResponseDTO classResponse = classService.getClassWithStudentsById(classId);
+        return ResponseEntity.ok(classResponse);
+    }
+
+    @PutMapping("/with-students/{classId}")
+    public ResponseEntity<ClassResponseDTO> updateClass(
+            @PathVariable Long classId,
+            @RequestBody org.backend.examprep_backend.dto.ClassRequestDTO classRequestDTO) {
+
+        ClassResponseDTO updatedClass = classService.updateClass(classId, classRequestDTO);
+        return ResponseEntity.ok(updatedClass);
+    }
+
+
+
+    @DeleteMapping("/with-students/{classId}")
+    public ResponseEntity<String> deleteClass(@PathVariable Long classId) {
+        classService.deleteClass(classId);
+        return ResponseEntity.ok("Class deleted successfully.");
     }
 
 
