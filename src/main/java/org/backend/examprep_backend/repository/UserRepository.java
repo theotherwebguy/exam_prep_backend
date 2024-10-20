@@ -1,5 +1,6 @@
 package org.backend.examprep_backend.repository;
 
+import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -7,6 +7,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.model.Role;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,15 +19,16 @@ import java.util.List;
 @Service
 public class StudentExcelParserService {
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     // Method to extract student details from an Excel file
     public List<Users> extractStudentsFromExcel(MultipartFile file, Role studentRole,  Long classesId) throws Exception {
         List<Users> students = new ArrayList<>();
-        String defaultPassword = "default123";  // Set default password for students
+        String defaultPassword = "default123";
 
-        // Get the input stream from the uploaded Excel file
         try (InputStream inputStream = file.getInputStream()) {
             Workbook workbook = new XSSFWorkbook(inputStream);
-            Sheet sheet = workbook.getSheetAt(0); // Assuming the data is in the first sheet
+            Sheet sheet = workbook.getSheetAt(0);
 
             // Iterate through each row in the sheet
             for (Row row : sheet) {
@@ -40,7 +43,7 @@ public class StudentExcelParserService {
                 student.setTitle(getCellValueAsString(row.getCell(2))); // Title
                 student.setSurname(getCellValueAsString(row.getCell(3))); // Surname
                 student.setContactNumber(getCellValueAsString(row.getCell(4))); // Contact number
-                student.setPassword(defaultPassword); // Default password
+                student.setPassword(passwordEncoder.encode(defaultPassword));
                 student.setRole(studentRole); // Assign the role
 
                 // Add the student to the list
