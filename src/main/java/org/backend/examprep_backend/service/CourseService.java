@@ -225,6 +225,10 @@ public class CourseService {
     }
 
 
+//    public List<Course> getCoursesForIndependentStudent(Integer userId) {
+//        return courseRepository.findCoursesByUserId(userId);
+//    }
+
 
 
 

@@ -151,4 +151,15 @@ public class CourseController {
         return ResponseEntity.ok(courseWithClasses);
     }
 
+    @Autowired
+    public CourseController(CourseService courseService) {
+        this.courseService = courseService;
+    }
+
+//    @GetMapping("/independent")
+//    public ResponseEntity<List<Course>> getCoursesForIndependentStudent(@RequestParam Integer userId) {
+//        List<Course> courses = courseService.getCoursesForIndependentStudent(userId);
+//        return ResponseEntity.ok(courses);
+//    }
+
 }
