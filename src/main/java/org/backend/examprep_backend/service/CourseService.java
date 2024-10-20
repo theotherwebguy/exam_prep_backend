@@ -135,8 +135,6 @@ public class CourseService {
         return topicRepository.findByDomain(domain);
     }
 
-
-
     public void deleteCourse(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));

@@ -11,10 +11,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+
 @Getter
 @Setter
 public class Users {
@@ -50,7 +47,7 @@ public class Users {
 
     // Field for storing user profile image as byte[]
     @Lob // Specifies that this is a large object (for storing binary data)
-    @Column(name = "profile_image")
+    @Column(name = "profile_image", nullable = true)
     private byte[] profileImage;
 
     // Use ManyToOne for a single Role
