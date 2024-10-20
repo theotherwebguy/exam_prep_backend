@@ -14,7 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class StudentExcelParserService {
@@ -30,21 +32,26 @@ public class StudentExcelParserService {
             Workbook workbook = new XSSFWorkbook(inputStream);
             Sheet sheet = workbook.getSheetAt(0);
 
-            // Iterate through each row in the sheet
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0) { // Skip the header row
-                    continue;
-                }
+            // Get the header row and map column names to their respective indexes
+            Row headerRow = sheet.getRow(0);
+            Map<String, Integer> columnIndexMap = mapColumnHeaders(headerRow);
 
-                // Extract and set student details from each row
+            // Iterate through each data row (skip the header row)
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+
+                if (row == null) continue; // Skip empty rows
+
+                // Create a new student object and populate fields
                 Users student = new Users();
-                student.setFullNames(getCellValueAsString(row.getCell(0))); // Full names
-                student.setEmail(getCellValueAsString(row.getCell(1))); // Email
-                student.setTitle(getCellValueAsString(row.getCell(2))); // Title
-                student.setSurname(getCellValueAsString(row.getCell(3))); // Surname
-                student.setContactNumber(getCellValueAsString(row.getCell(4))); // Contact number
+                student.setFullNames(getCellValueAsString(row.getCell(columnIndexMap.get("Full Names"))));
+                student.setEmail(getCellValueAsString(row.getCell(columnIndexMap.get("Email"))));
+                student.setTitle(getCellValueAsString(row.getCell(columnIndexMap.get("Title"))));
+                student.setSurname(getCellValueAsString(row.getCell(columnIndexMap.get("Surname"))));
+                student.setContactNumber(getCellValueAsString(row.getCell(columnIndexMap.get("Contact Number"))));
                 student.setPassword(passwordEncoder.encode(defaultPassword));
-                student.setRole(studentRole); // Assign the role
+                student.setRole(studentRole);
+
 
                 // Add the student to the list
                 Classes studentClass = new Classes();
@@ -61,6 +68,17 @@ public class StudentExcelParserService {
         return students; // Return the list of students extracted from the Excel file
     }
 
+    // Helper method to map column headers to their indexes
+    private Map<String, Integer> mapColumnHeaders(Row headerRow) {
+        Map<String, Integer> columnIndexMap = new HashMap<>();
+
+        for (Cell cell : headerRow) {
+            String header = getCellValueAsString(cell).trim();
+            columnIndexMap.put(header, cell.getColumnIndex());
+        }
+
+        return columnIndexMap;
+    }
     // Helper method to handle different cell types and return as String
     private String getCellValueAsString(Cell cell) {
         if (cell == null) {

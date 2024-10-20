@@ -34,7 +34,7 @@ public class Classes {
     @JoinColumn(name = "userId", nullable = false)
     private Users lecturer;
 
-    @OneToMany(mappedBy = "studentClass", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "studentClass", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Users> students;
 
 
