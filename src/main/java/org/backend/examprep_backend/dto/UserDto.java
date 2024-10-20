@@ -28,6 +28,7 @@ public class UserDto {
     private String surname;
 
     @NotBlank(message = "Contact number is required")
+
     private String contactNumber;
 
     @NotBlank(message = "Role is required")
