@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.backend.examprep_backend.ResourceNotFoundException;
 import org.backend.examprep_backend.dto.ClassDTO;
 import org.backend.examprep_backend.dto.ClassResponseDTO;
+import org.backend.examprep_backend.dto.EnrolledClassDTO;
 import org.backend.examprep_backend.dto.UserDto;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Course;
@@ -26,6 +27,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/classes")
 public class ClassController {
+
+    //private final ClassService classService;
+
+    public ClassController(ClassService classService) {
+        this.classService = classService;
+    }
 
     @Autowired
     private StudentExcelParserService studentExcelParserService;
@@ -132,4 +139,9 @@ public class ClassController {
     }
 
 
+    @GetMapping("/enrolled")
+    public ResponseEntity<List<EnrolledClassDTO>> getEnrolledClasses(@RequestParam Long studentId) {
+        List<EnrolledClassDTO> enrolledClasses = classService.getEnrolledClasses(studentId);
+        return ResponseEntity.ok(enrolledClasses);
+    }
 }

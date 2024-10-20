@@ -36,6 +36,7 @@ public class Users {
     @Column(nullable = false)
     private String fullNames;
 
+
     @NotBlank(message = "Surname is mandatory")
     @Column(nullable = false)
     private String surname;

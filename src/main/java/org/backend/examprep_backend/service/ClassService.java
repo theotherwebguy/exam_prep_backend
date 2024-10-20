@@ -5,10 +5,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.backend.examprep_backend.InvalidRoleException;
 import org.backend.examprep_backend.ResourceNotFoundException;
-import org.backend.examprep_backend.dto.ClassDTO;
-import org.backend.examprep_backend.dto.ClassResponseDTO;
-import org.backend.examprep_backend.dto.CourseResponseDTO;
-import org.backend.examprep_backend.dto.StudentResponseDTO;
+import org.backend.examprep_backend.dto.*;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.model.Course;
@@ -128,6 +125,17 @@ public class ClassService {
         dto.setContactNumber(student.getContactNumber());
         return dto;
     }
+
+
+    @Autowired
+    public ClassService(ClassRepository classRepository) {
+        this.classRepository = classRepository;
+    }
+
+    public List<EnrolledClassDTO> getEnrolledClasses(Long studentId) {
+        return classRepository.findEnrolledClassesByStudentId(studentId);
+    }
+
 
 
 
