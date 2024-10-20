@@ -1,5 +1,6 @@
 package org.backend.examprep_backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.backend.examprep_backend.dto.UserDto;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Role;
@@ -9,6 +10,7 @@ import org.backend.examprep_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -26,42 +29,33 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
     @Autowired
     private RoleRepository roleRepository;
 
-    // Register
-    @PostMapping(value = "/register", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> registerUser(@Valid @RequestBody UserDto userDto, @RequestPart("image") MultipartFile image) {
+    // Register user
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> registerUser(@RequestParam("userDto") String userDtoJson,
+                                          @RequestPart("image") MultipartFile image) throws IOException {
         try {
-            // Ensure image is not null and not empty
-            // Define allowed image types and max size
-            List<String> allowedMimeTypes = Arrays.asList("image/jpeg", "image/png", "image/gif");
-            long maxSize = 5 * 1024 * 1024; // 5MB
+            ObjectMapper objectMapper = new ObjectMapper();
+            UserDto userDto = objectMapper.readValue(userDtoJson, UserDto.class);
 
-            // Ensure image is not null and not empty
+            long maxSize = 3 * 1024 * 1024; // 3MB limit
+
+            // Validate image
             if (image != null && !image.isEmpty()) {
-                // Validate image type
-                String mimeType = image.getContentType();
-                if (!allowedMimeTypes.contains(mimeType)) {
-                    return ResponseEntity.badRequest().body("Error: Invalid image type. Only JPEG, PNG, and GIF are allowed.");
-                }
-
-                // Validate image size
                 if (image.getSize() > maxSize) {
                     return ResponseEntity.badRequest().body("Error: Image size exceeds the maximum limit of 5MB.");
                 }
-
-                // Convert the image to byte[] and set it
                 userDto.setProfileImage(image.getBytes());
             }
 
-            // Ensure role is set before saving
+            // Validate role
             if (userDto.getRole() == null || userDto.getRole().isEmpty()) {
                 return ResponseEntity.badRequest().body("Error: User must have a role.");
             }
 
-            // Check if user already exists with the same email
+            // Check if user already exists
             Optional<Users> existingUser = userService.findUserByEmail(userDto.getEmail());
             if (existingUser.isPresent()) {
                 return ResponseEntity.badRequest().body("Error: A user with this email already exists.");
@@ -72,27 +66,40 @@ public class UserController {
                 return ResponseEntity.badRequest().body("Error: Password cannot be null or empty.");
             }
 
-            // Fetch the role from the database
+            // Set role from repository
             Role role = roleRepository.findByName(userDto.getRole())
                     .orElseThrow(() -> new IllegalArgumentException("Error: Role not found"));
 
-            // Set the role in the user DTO before passing it to the service
-            userDto.setRole(role.getName()); // Set the role name in the DTO
+            userDto.setRole(role.getName()); // Set role in userDto
 
-            // Register the user
-            userService.registerUser(userDto); // Pass the DTO to UserService
+            // Register user
+            userService.registerUser(userDto, userDto.getProfileImage());
             return ResponseEntity.ok("User registered successfully.");
 
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Error: User with this email or contact number already exists." + e.getMessage());
+                    .body("Error: User with this email or contact number already exists. " + e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred. Please try again." + e.getMessage());
+                    .body("An unexpected error occurred. Please try again. " + e.getMessage());
         }
+    }
 
+    // Endpoint to list all lecturers
+    @GetMapping("/lecturers")
+    public ResponseEntity<List<Users>> listLecturers() {
+        List<Users> lecturers = userService.getAllLecturers();
+        return ResponseEntity.ok(lecturers);
+    }
+
+    // Endpoint to search for a lecturer by surname
+    @GetMapping("/lecturers/search")
+    public ResponseEntity<?> searchLecturer(@RequestParam("surname") String surname) {
+        Optional<Users> lecturer = userService.binarySearchLecturerByName(surname);
+        return lecturer.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // Get all users
