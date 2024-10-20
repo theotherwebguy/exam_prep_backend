@@ -5,10 +5,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.backend.examprep_backend.InvalidRoleException;
 import org.backend.examprep_backend.ResourceNotFoundException;
-import org.backend.examprep_backend.dto.ClassDTO;
-import org.backend.examprep_backend.dto.ClassResponseDTO;
-import org.backend.examprep_backend.dto.CourseResponseDTO;
-import org.backend.examprep_backend.dto.StudentResponseDTO;
+import org.backend.examprep_backend.dto.*;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.model.Course;
@@ -98,6 +95,13 @@ public class ClassService {
                 .map(this::mapToClassResponseDTO)
                 .toList();
     }
+    @Transactional
+    public ClassResponseDTO getClassWithStudentsById(Long classId) {
+        Classes classEntity = classRepository.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found with ID: " + classId));
+        return mapToClassResponseDTO(classEntity);
+    }
+
     private ClassResponseDTO mapToClassResponseDTO(Classes classes) {
         ClassResponseDTO dto = new ClassResponseDTO();
         dto.setClassId(classes.getClassesId());
@@ -127,6 +131,36 @@ public class ClassService {
         dto.setEmail(student.getEmail());
         dto.setContactNumber(student.getContactNumber());
         return dto;
+    }
+
+    @Transactional
+    public ClassResponseDTO updateClass(Long classId, ClassRequestDTO classRequestDTO) {
+        // Find the class by ID or throw an exception
+        Classes existingClass = classRepository.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found with ID: " + classId));
+
+        // Update the class fields
+        existingClass.setClassName(classRequestDTO.getClassName());
+        existingClass.setClassDescription(classRequestDTO.getClassDescription());
+
+        // If the course ID is provided, link the course to the class
+        if (classRequestDTO.getCourseId() != null) {
+            Course course = courseRepository.findById(classRequestDTO.getCourseId())
+                    .orElseThrow(() -> new RuntimeException("Course not found with ID: " + classRequestDTO.getCourseId()));
+            existingClass.setCourse(course);
+        }
+
+        // Save the updated class
+        Classes updatedClass = classRepository.save(existingClass);
+        return mapToClassResponseDTO(updatedClass);
+    }
+
+    @Transactional
+    public void deleteClass(Long classId) {
+        if (!classRepository.existsById(classId)) {
+            throw new RuntimeException("Class not found with ID: " + classId);
+        }
+        classRepository.deleteById(classId);
     }
 
 
