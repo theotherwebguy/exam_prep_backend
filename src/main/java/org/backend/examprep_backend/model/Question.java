@@ -14,9 +14,9 @@ public class Question {
     @Column(columnDefinition = "TEXT")
     private String questionText;
 
-    @ManyToOne
-    @JoinColumn(name = "domainId", nullable = false)
-    private Domain domain;
+//    @ManyToOne
+//    @JoinColumn(name = "domainId", nullable = false)
+//    private Domain domain;
 
     @ManyToOne
     @JoinColumn(name = "topicId", nullable = false)
