@@ -87,6 +87,21 @@ public class UserController {
         }
     }
 
+    // Endpoint to list all lecturers
+    @GetMapping("/lecturers")
+    public ResponseEntity<List<Users>> listLecturers() {
+        List<Users> lecturers = userService.getAllLecturers();
+        return ResponseEntity.ok(lecturers);
+    }
+
+    // Endpoint to search for a lecturer by surname
+    @GetMapping("/lecturers/search")
+    public ResponseEntity<?> searchLecturer(@RequestParam("surname") String surname) {
+        Optional<Users> lecturer = userService.binarySearchLecturerByName(surname);
+        return lecturer.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // Get all users
     @GetMapping("/all")
     public ResponseEntity<List<Users>> getAllUsers() {
