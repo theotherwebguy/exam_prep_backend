@@ -24,7 +24,7 @@ public class Users {
 
     @Email(message = "Email should be valid")
     @NotBlank(message = "Email is mandatory")
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @NotBlank(message = "Password is mandatory")
@@ -45,7 +45,7 @@ public class Users {
 
     @NotBlank(message = "Contact number is mandatory")
     @Pattern(regexp = "\\+?\\d{10,15}", message = "Contact number should be valid")
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String contactNumber;
 
     // Field for storing user profile image as byte[]
@@ -53,7 +53,6 @@ public class Users {
     @Column(name = "profile_image")
     private byte[] profileImage;
 
-    // Use ManyToOne for a single Role
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     @NotNull(message = "User must have a role")
@@ -68,6 +67,6 @@ public class Users {
     private Set<Course> courses;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "class_id")  // Link the student to the class
+    @JoinColumn(name = "class_id")
     private Classes studentClass;
 }

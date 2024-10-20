@@ -28,6 +28,7 @@ public class UserDto {
     private String surname;
 
     @NotBlank(message = "Contact number is required")
+
     private String contactNumber;
 
     @NotBlank(message = "Role is required")
@@ -38,9 +39,4 @@ public class UserDto {
 
     private List<Long> courseIds;
 
-    public UserDto(Long id, String fullNames, String email) {
-        this.id = id;
-        this.fullNames = fullNames;
-        this.email = email;
-    }
 }
