@@ -38,9 +38,4 @@ public class UserDto {
 
     private List<Long> courseIds;
 
-    public UserDto(Long id, String fullNames, String email) {
-        this.id = id;
-        this.fullNames = fullNames;
-        this.email = email;
-    }
 }
