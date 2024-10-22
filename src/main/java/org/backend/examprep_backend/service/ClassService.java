@@ -110,6 +110,8 @@ public class ClassService {
         ClassResponseDTO dto = new ClassResponseDTO();
         dto.setClassId(classes.getClassesId());
         dto.setClassName(classes.getClassName());
+        dto.setStartDate(classes.getStartDate());
+        dto.setEndDate(classes.getEndDate());
         dto.setClassDescription(classes.getClassDescription());
 
         // Map students to StudentResponseDTO
@@ -117,13 +119,25 @@ public class ClassService {
                 .map(this::mapToStudentResponseDTO)
                 .toList();
         dto.setStudents(studentDTOs);
-// Map the course information
+
+
+      // Map the course information
         if (classes.getCourse() != null) {
             CourseResponseDTO courseDTO = new CourseResponseDTO();
             courseDTO.setCourseId(classes.getCourse().getCourseId());
             courseDTO.setCourseName(classes.getCourse().getCourseName());
             courseDTO.setCourseDescription(classes.getCourse().getCourseDescription());
             dto.setCourse(courseDTO);
+        }
+
+        // Map the lecturer information
+        if (classes.getLecturer() != null) {
+            LecturerResponseDTO lecturerDTO = new LecturerResponseDTO();
+            lecturerDTO.setLecturerId(classes.getLecturer().getId());
+            lecturerDTO.setFullName(classes.getLecturer().getFullNames());
+            lecturerDTO.setEmail(classes.getLecturer().getEmail());
+            lecturerDTO.setContactNumber(classes.getLecturer().getContactNumber());
+            dto.setLecturer(lecturerDTO);
         }
 
         return dto;
@@ -153,7 +167,25 @@ public class ClassService {
                     .orElseThrow(() -> new RuntimeException("Course not found with ID: " + classRequestDTO.getCourseId()));
             existingClass.setCourse(course);
         }
+        // Update the lecturer if provided
+        if (classRequestDTO.getLecturerId() != null) {
+            Users lecturer = userRepository.findById(classRequestDTO.getLecturerId())
+                    .orElseThrow(() -> new RuntimeException("Lecturer not found with ID: " + classRequestDTO.getLecturerId()));
 
+            // Ensure that the user is a lecturer
+            if (!lecturer.getRole().getName().equalsIgnoreCase("Lecturer")) {
+                throw new RuntimeException("User is not a Lecturer");
+            }
+            existingClass.setLecturer(lecturer);
+        }
+
+        // Update start and end dates if provided
+        if (classRequestDTO.getStartDate() != null) {
+            existingClass.setStartDate(classRequestDTO.getStartDate());
+        }
+        if (classRequestDTO.getEndDate() != null) {
+            existingClass.setEndDate(classRequestDTO.getEndDate());
+        }
         // Save the updated class
         Classes updatedClass = classRepository.save(existingClass);
         return mapToClassResponseDTO(updatedClass);

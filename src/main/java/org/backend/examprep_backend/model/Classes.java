@@ -6,6 +6,7 @@ import org.apache.catalina.User;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -34,8 +35,8 @@ public class Classes {
     @JoinColumn(name = "userId", nullable = false)
     private Users lecturer;
 
-    @OneToMany(mappedBy = "studentClass", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Users> students;
+    @ManyToMany(mappedBy = "studentClasses")
+    private Set<Users> students = new HashSet<>();
 
 
 }
