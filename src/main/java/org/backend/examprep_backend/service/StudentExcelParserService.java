@@ -7,46 +7,73 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.model.Role;
+import org.backend.examprep_backend.repository.ClassRepository;
+import org.backend.examprep_backend.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class StudentExcelParserService {
+    @Autowired
+    private UserRepository userRepository;
 
+    @Autowired
+    private ClassRepository classRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     // Method to extract student details from an Excel file
     public List<Users> extractStudentsFromExcel(MultipartFile file, Role studentRole,  Long classesId) throws Exception {
         List<Users> students = new ArrayList<>();
-        String defaultPassword = "default123";  // Set default password for students
+        String defaultPassword = "default123";
 
-        // Get the input stream from the uploaded Excel file
+        // Get class by ID
+        Classes studentClass = classRepository.findById(classesId)
+                .orElseThrow(() -> new RuntimeException("Class not found with ID: " + classesId));
+
         try (InputStream inputStream = file.getInputStream()) {
             Workbook workbook = new XSSFWorkbook(inputStream);
-            Sheet sheet = workbook.getSheetAt(0); // Assuming the data is in the first sheet
+            Sheet sheet = workbook.getSheetAt(0);
 
-            // Iterate through each row in the sheet
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0) { // Skip the header row
-                    continue;
-                }
+            // Get the header row and map column names to their respective indexes
+            Row headerRow = sheet.getRow(0);
+            Map<String, Integer> columnIndexMap = mapColumnHeaders(headerRow);
 
-                // Extract and set student details from each row
-                Users student = new Users();
-                student.setFullNames(getCellValueAsString(row.getCell(0))); // Full names
-                student.setEmail(getCellValueAsString(row.getCell(1))); // Email
-                student.setTitle(getCellValueAsString(row.getCell(2))); // Title
-                student.setSurname(getCellValueAsString(row.getCell(3))); // Surname
-                student.setContactNumber(getCellValueAsString(row.getCell(4))); // Contact number
-                student.setPassword(defaultPassword); // Default password
-                student.setRole(studentRole); // Assign the role
+            // Iterate through each data row (skip the header row)
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
 
-                // Add the student to the list
-                Classes studentClass = new Classes();
-                studentClass.setClassesId(classesId);
-                student.setStudentClass(studentClass);
+                if (row == null) continue; // Skip empty rows
+
+                String email = getCellValueAsString(row.getCell(columnIndexMap.get("Email")));
+
+                // Create a new student object and populate fields
+                Users student = userRepository.findByEmail(email)
+                        .orElseGet(() -> {
+                            // Create a new student if not found
+                            Users newStudent = new Users();
+                            newStudent.setFullNames(getCellValueAsString(row.getCell(columnIndexMap.get("Full Names"))));
+                            newStudent.setEmail(email);
+                            newStudent.setTitle(getCellValueAsString(row.getCell(columnIndexMap.get("Title"))));
+                            newStudent.setSurname(getCellValueAsString(row.getCell(columnIndexMap.get("Surname"))));
+                            newStudent.setContactNumber(getCellValueAsString(row.getCell(columnIndexMap.get("Contact Number"))));
+                            newStudent.setPassword(passwordEncoder.encode(defaultPassword));
+                            newStudent.setRole(studentRole);
+                            return newStudent;
+                        });
+
+
+                // Add the class to the student's class set
+                student.getStudentClasses().add(studentClass);
+                studentClass.getStudents().add(student);
 
                 students.add(student);
             }
@@ -55,9 +82,19 @@ public class StudentExcelParserService {
             workbook.close();
         }
 
-        return students; // Return the list of students extracted from the Excel file
+        return students;
     }
 
+    private Map<String, Integer> mapColumnHeaders(Row headerRow) {
+        Map<String, Integer> columnIndexMap = new HashMap<>();
+
+        for (Cell cell : headerRow) {
+            String header = getCellValueAsString(cell).trim();
+            columnIndexMap.put(header, cell.getColumnIndex());
+        }
+
+        return columnIndexMap;
+    }
     // Helper method to handle different cell types and return as String
     private String getCellValueAsString(Cell cell) {
         if (cell == null) {

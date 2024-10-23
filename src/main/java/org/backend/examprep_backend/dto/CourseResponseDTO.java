@@ -1,15 +1,13 @@
 package org.backend.examprep_backend.dto;
 
 import lombok.Data;
-import java.util.List;
 
 @Data
-public class CourseDTO {
+public class CourseResponseDTO {
     private Long courseId;
     private String courseName;
     private String courseDescription;
-    private byte[] image;  // Image URL
-    private List<DomainDTO> domains;
 
-    private List<ClassDTO> classes;
+    // Getters and Setters
 }
+

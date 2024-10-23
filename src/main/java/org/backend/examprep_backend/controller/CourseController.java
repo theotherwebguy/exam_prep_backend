@@ -1,9 +1,8 @@
 package org.backend.examprep_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.backend.examprep_backend.dto.CourseDTO;
-import org.backend.examprep_backend.dto.DomainDTO;
-import org.backend.examprep_backend.dto.TopicDTO;
+import jakarta.transaction.Transactional;
+import org.backend.examprep_backend.dto.*;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Domain;
 import org.backend.examprep_backend.model.Topic;
@@ -45,11 +44,11 @@ public class CourseController {
             @RequestPart("courseDetails") String courseDetailsJson,
             @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
 
-        // Deserialize courseDetails
         ObjectMapper objectMapper = new ObjectMapper();
         CourseDTO courseDTO = objectMapper.readValue(courseDetailsJson, CourseDTO.class);
 
-        // Update course with domains, topics, and the image (if provided)
+
+
         Course updatedCourse = courseService.updateCourseWithDomainsAndTopics(courseId, courseDTO, imageFile);
 
         return ResponseEntity.ok(updatedCourse);
@@ -113,6 +112,7 @@ public class CourseController {
 
         // Convert Course entity to CourseDTO
         CourseDTO courseDTO = new CourseDTO();
+        courseDTO.setCourseId(course.getCourseId());
         courseDTO.setCourseName(course.getCourseName());
         courseDTO.setCourseDescription(course.getCourseDescription());
         courseDTO.setImage(course.getImage()); // Handling image as byte[]
@@ -137,6 +137,18 @@ public class CourseController {
         courseDTO.setDomains(domainDTOList);
 
         return ResponseEntity.ok(courseDTO);
+    }
+
+    @GetMapping("/with-classes")
+    public ResponseEntity<List<CourseWithClassesDTO>> getCoursesWithClasses() {
+        List<CourseWithClassesDTO> courses = courseService.getAllCoursesWithClassesDTO();
+        return ResponseEntity.ok(courses);
+    }
+
+    @GetMapping("/classes/{courseId}")
+    public ResponseEntity<CourseWithClassesDTO> getCourseWithClasses(@PathVariable Long courseId) {
+        CourseWithClassesDTO courseWithClasses = courseService.getCourseWithClassesDTOUsingID(courseId);
+        return ResponseEntity.ok(courseWithClasses);
     }
 
 }

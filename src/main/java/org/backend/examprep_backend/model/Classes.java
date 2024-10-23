@@ -5,6 +5,11 @@ import lombok.Setter;
 import org.apache.catalina.User;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -22,12 +27,16 @@ public class Classes {
     private LocalDate endDate;
 
 
-    @ManyToOne
-    @JoinColumn(name = "courseId", nullable = false)
-    private Course course;
+    @ManyToOne(fetch = FetchType.EAGER) // Adjust fetch type if needed
+    @JoinColumn(name = "course_id", nullable = false) // Foreign key
+    private Course course; // Add this field
 
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
     private Users lecturer;
+
+    @ManyToMany(mappedBy = "studentClasses")
+    private Set<Users> students = new HashSet<>();
+
 
 }

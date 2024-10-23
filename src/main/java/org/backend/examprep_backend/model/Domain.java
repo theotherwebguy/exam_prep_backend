@@ -1,16 +1,15 @@
 package org.backend.examprep_backend.model;
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
 @Getter
 @Setter
 @Entity
+@Table(name = "domain")
 public class Domain {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,5 +28,3 @@ public class Domain {
     @JsonManagedReference
     private List<Topic> topics;
 }
-
-
