@@ -6,7 +6,9 @@ import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Role;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.repository.RoleRepository;
+import org.backend.examprep_backend.repository.UserRepository;
 import org.backend.examprep_backend.service.UserService;
+import org.hibernate.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,9 @@ public class UserController {
     private UserService userService;
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     // Register user
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -109,17 +114,56 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    // Get user by ID
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getUserById(@PathVariable Long userId) {
+        try {
+            Users user = userService.findUserById(userId); // Call the service method
+            return ResponseEntity.ok(user);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again. Error: " + e.getMessage());
+        }
+    }
+
     // Update user
     @PutMapping("/update/{userId}")
     public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
         try {
+            // Retrieve the current user data
+            Users currentUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Populate userDto with current data if not provided
+            if (userDto.getEmail() == null) {
+                userDto.setEmail(currentUser.getEmail());
+            }
+            if (userDto.getFullNames() == null) {
+                userDto.setFullNames(currentUser.getFullNames());
+            }
+            if (userDto.getSurname() == null) {
+                userDto.setSurname(currentUser.getSurname());
+            }
+            if (userDto.getContactNumber() == null) {
+                userDto.setContactNumber(currentUser.getContactNumber());
+            }
+            if (userDto.getTitle() == null) {
+                userDto.setTitle(currentUser.getTitle());
+            }
+            if (userDto.getRole() == null) {
+                userDto.setRole(currentUser.getRole().getName());
+            }
+
+            // Proceed to update the user with the populated userDto
             userService.updateUser(userId, userDto);
             return ResponseEntity.ok("User updated successfully.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred. Please try again." + e.getMessage());
+                    .body("An unexpected error occurred. Please try again. Error: " + e.getMessage());
         }
     }
 
@@ -151,7 +195,6 @@ public class UserController {
         }
     }
 
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
         StringBuilder errorMessage = new StringBuilder("Validation failed: ");
@@ -162,7 +205,8 @@ public class UserController {
         return ResponseEntity.badRequest().body(errorMessage.toString());
     }
 
-    @GetMapping("/{email}")
+    // Get user by email
+    @GetMapping("/email/{email}")
     public ResponseEntity<?> getUser(@PathVariable String email) {
         return userService.findUserByEmail(email)
                 .map(ResponseEntity::ok)

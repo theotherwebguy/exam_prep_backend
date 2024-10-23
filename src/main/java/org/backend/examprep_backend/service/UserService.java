@@ -70,6 +70,12 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    // Method to find a user by ID
+    public Users findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
     // Gt all users
     @Transactional(readOnly = true)
     public List<Users> getAllUsers() {
@@ -79,23 +85,40 @@ public class UserService {
     //Update a user
     @Transactional
     public void updateUser(Long userId, UserDto userDto) {
+        // Retrieve the current user data
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        user.setEmail(userDto.getEmail());
-        user.setFullNames(userDto.getFullNames());
-        user.setSurname(userDto.getSurname());
-        user.setContactNumber(userDto.getContactNumber());
-        user.setTitle(userDto.getTitle());
+        // Set new values while retaining existing ones
+        if (userDto.getEmail() != null) {
+            user.setEmail(userDto.getEmail());
+        }
+        if (userDto.getFullNames() != null) {
+            user.setFullNames(userDto.getFullNames());
+        }
+        if (userDto.getSurname() != null) {
+            user.setSurname(userDto.getSurname());
+        }
+        if (userDto.getContactNumber() != null) {
+            user.setContactNumber(userDto.getContactNumber());
+        }
+        if (userDto.getTitle() != null) {
+            user.setTitle(userDto.getTitle());
+        }
 
+        // Update password only if provided
         if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
 
-        Role role = roleRepository.findByName(userDto.getRole())
-                .orElseThrow(() -> new IllegalArgumentException("Role not found"));
-        user.setRole(role);
+        // Update role only if different
+        if (!user.getRole().getName().equals(userDto.getRole())) {
+            Role role = roleRepository.findByName(userDto.getRole())
+                    .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+            user.setRole(role);
+        }
 
+        // Save the updated user
         userRepository.save(user);
     }
 
@@ -106,7 +129,6 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         userRepository.delete(user);
     }
-
 
     // Find a user by email or contact number
     @Transactional(readOnly = true)
