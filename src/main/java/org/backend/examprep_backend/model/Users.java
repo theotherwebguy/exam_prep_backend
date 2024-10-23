@@ -47,6 +47,7 @@ public class Users {
     private String contactNumber;
 
     @Lob
+    @Basic(fetch=FetchType.LAZY)
     @Column(name = "profile_image", nullable = true)
     private byte[] profileImage;
 
