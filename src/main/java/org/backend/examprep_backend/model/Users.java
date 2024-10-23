@@ -46,8 +46,7 @@ public class Users {
     @Column(nullable = false,unique = true)
     private String contactNumber;
 
-    // Field for storing user profile image as byte[]
-    @Lob // Specifies that this is a large object (for storing binary data)
+    @Lob
     @Column(name = "profile_image", nullable = true)
     private byte[] profileImage;
 

@@ -15,11 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -76,11 +73,45 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
-    // Gt all users
-    @Transactional(readOnly = true)
-    public List<Users> getAllUsers() {
-        return userRepository.findAll();
+//    // Gt all users
+//    @Transactional(readOnly = true)
+//    public List<Users> getAllUsers() {
+//        return userRepository.findAll();
+//    }
+@Transactional(readOnly = true)
+public List<UserDto> findAllUsers() {
+    return userRepository.findAll().stream()
+            .map(this::mapToUserDto)
+            .collect(Collectors.toList());
+}
+    private UserDto mapToUserDto(Users user) {
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setEmail(user.getEmail());
+        userDto.setPassword(user.getPassword()); // Ideally, you may want to exclude passwords in DTOs for security reasons
+        userDto.setTitle(user.getTitle());
+        userDto.setFullNames(user.getFullNames());
+        userDto.setSurname(user.getSurname());
+        userDto.setContactNumber(user.getContactNumber());
+        userDto.setRole(user.getRole().getName()); // Assuming Role has a "name" field
+
+        // Convert profile image byte[] to Base64 encoded string
+        if (user.getProfileImage() != null) {
+            String profileImageBase64 = Base64.getEncoder().encodeToString(user.getProfileImage());
+            userDto.setProfileImage(profileImageBase64.getBytes());
+        }
+
+        // You can map other fields like course IDs here if needed
+        if (user.getCourses() != null) {
+            List<Long> courseIds = user.getCourses().stream()
+                    .map(Course::getCourseId)
+                    .collect(Collectors.toList());
+            userDto.setCourseIds(courseIds);
+        }
+
+        return userDto;
     }
+
 
     @Transactional
     public void updateUser(Long userId, UserDto userDto) {
