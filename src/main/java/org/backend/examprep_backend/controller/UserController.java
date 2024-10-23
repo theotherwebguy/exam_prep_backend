@@ -126,6 +126,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred. Please try again. Error: " + e.getMessage());
         }
+
     }
 
     // Update user
@@ -211,6 +212,7 @@ public class UserController {
         return userService.findUserByEmail(email)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+
     }
 
     @PostMapping("/login")
