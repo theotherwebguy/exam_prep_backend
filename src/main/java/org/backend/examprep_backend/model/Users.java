@@ -22,7 +22,7 @@ public class Users {
 
     @Email(message = "Email should be valid")
     @NotBlank(message = "Email is mandatory")
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     private String email;
 
     @NotBlank(message = "Password is mandatory")
@@ -43,7 +43,7 @@ public class Users {
 
     @NotBlank(message = "Contact number is mandatory")
     @Pattern(regexp = "\\+?\\d{10,15}", message = "Contact number should be valid")
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     private String contactNumber;
 
     // Field for storing user profile image as byte[]
