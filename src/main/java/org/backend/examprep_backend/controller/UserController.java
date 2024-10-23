@@ -107,12 +107,12 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Get all users
     @GetMapping("/all")
-    public ResponseEntity<List<Users>> getAllUsers() {
-        List<Users> users = userService.getAllUsers();
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        List<UserDto> users = userService.findAllUsers();
         return ResponseEntity.ok(users);
     }
+
 
     // Get user by ID
     @GetMapping("/{userId}")
