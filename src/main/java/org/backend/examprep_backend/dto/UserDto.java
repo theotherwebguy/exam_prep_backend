@@ -33,8 +33,7 @@ public class UserDto {
 
     @NotBlank(message = "Role is required")
     private String role;
- 
-    // Field for handling profile image
+
     private byte[] profileImage;
 
     private List<Long> courseIds;

@@ -26,7 +26,7 @@ public class Course {
 
     @Lob
     @Column(name = "image", nullable = true)
-    private byte[] image;  // Store image as a byte array
+    private byte[] image;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference // This prevents the recursive serialization of the "course" object inside "domains"
