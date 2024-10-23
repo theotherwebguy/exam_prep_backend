@@ -7,6 +7,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.model.Role;
+import org.backend.examprep_backend.repository.ClassRepository;
+import org.backend.examprep_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,11 @@ import java.util.Map;
 
 @Service
 public class StudentExcelParserService {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ClassRepository classRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -27,6 +34,10 @@ public class StudentExcelParserService {
     public List<Users> extractStudentsFromExcel(MultipartFile file, Role studentRole,  Long classesId) throws Exception {
         List<Users> students = new ArrayList<>();
         String defaultPassword = "default123";
+
+        // Get class by ID
+        Classes studentClass = classRepository.findById(classesId)
+                .orElseThrow(() -> new RuntimeException("Class not found with ID: " + classesId));
 
         try (InputStream inputStream = file.getInputStream()) {
             Workbook workbook = new XSSFWorkbook(inputStream);
@@ -42,21 +53,27 @@ public class StudentExcelParserService {
 
                 if (row == null) continue; // Skip empty rows
 
+                String email = getCellValueAsString(row.getCell(columnIndexMap.get("Email")));
+
                 // Create a new student object and populate fields
-                Users student = new Users();
-                student.setFullNames(getCellValueAsString(row.getCell(columnIndexMap.get("Full Names"))));
-                student.setEmail(getCellValueAsString(row.getCell(columnIndexMap.get("Email"))));
-                student.setTitle(getCellValueAsString(row.getCell(columnIndexMap.get("Title"))));
-                student.setSurname(getCellValueAsString(row.getCell(columnIndexMap.get("Surname"))));
-                student.setContactNumber(getCellValueAsString(row.getCell(columnIndexMap.get("Contact Number"))));
-                student.setPassword(passwordEncoder.encode(defaultPassword));
-                student.setRole(studentRole);
+                Users student = userRepository.findByEmail(email)
+                        .orElseGet(() -> {
+                            // Create a new student if not found
+                            Users newStudent = new Users();
+                            newStudent.setFullNames(getCellValueAsString(row.getCell(columnIndexMap.get("Full Names"))));
+                            newStudent.setEmail(email);
+                            newStudent.setTitle(getCellValueAsString(row.getCell(columnIndexMap.get("Title"))));
+                            newStudent.setSurname(getCellValueAsString(row.getCell(columnIndexMap.get("Surname"))));
+                            newStudent.setContactNumber(getCellValueAsString(row.getCell(columnIndexMap.get("Contact Number"))));
+                            newStudent.setPassword(passwordEncoder.encode(defaultPassword));
+                            newStudent.setRole(studentRole);
+                            return newStudent;
+                        });
 
 
-                // Add the student to the list
-                Classes studentClass = new Classes();
-                studentClass.setClassesId(classesId);
-                student.setStudentClass(studentClass);
+                // Add the class to the student's class set
+                student.getStudentClasses().add(studentClass);
+                studentClass.getStudents().add(student);
 
                 students.add(student);
             }
@@ -65,10 +82,9 @@ public class StudentExcelParserService {
             workbook.close();
         }
 
-        return students; // Return the list of students extracted from the Excel file
+        return students;
     }
 
-    // Helper method to map column headers to their indexes
     private Map<String, Integer> mapColumnHeaders(Row headerRow) {
         Map<String, Integer> columnIndexMap = new HashMap<>();
 

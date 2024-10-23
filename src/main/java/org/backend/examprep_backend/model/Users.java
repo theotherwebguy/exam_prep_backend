@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -62,8 +63,11 @@ public class Users {
             inverseJoinColumns = @JoinColumn(name = "course_id")
     )
     private Set<Course> courses;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "class_id")
-    private Classes studentClass;
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "student_class",
+            joinColumns = @JoinColumn(name = "student_id"),
+            inverseJoinColumns = @JoinColumn(name = "class_id")
+    )
+    private Set<Classes> studentClasses = new HashSet<>();
 }
