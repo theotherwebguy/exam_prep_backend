@@ -1,7 +1,6 @@
 package org.backend.examprep_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.oas.annotations.Parameter;
 import org.backend.examprep_backend.dto.UserDto;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Role;
@@ -9,6 +8,7 @@ import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.repository.RoleRepository;
 import org.backend.examprep_backend.repository.UserRepository;
 import org.backend.examprep_backend.service.UserService;
+import org.hibernate.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -116,7 +116,7 @@ public class UserController {
 
     // Get user by ID
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserById(@Parameter(description = "ID of the user") @PathVariable Long userId) {
+    public ResponseEntity<?> getUserById(@PathVariable Long userId) {
         try {
             Users user = userService.findUserById(userId); // Call the service method
             return ResponseEntity.ok(user);
@@ -126,6 +126,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred. Please try again. Error: " + e.getMessage());
         }
+
     }
 
     // Update user
@@ -207,12 +208,12 @@ public class UserController {
 
     // Get user by email
     @GetMapping("/email/{email}")
-    public ResponseEntity<?> getUser(@Parameter(description = "Email of the user") @PathVariable String email) {
+    public ResponseEntity<?> getUser(@PathVariable String email) {
         return userService.findUserByEmail(email)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
 
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam String email, @RequestParam String password) {
