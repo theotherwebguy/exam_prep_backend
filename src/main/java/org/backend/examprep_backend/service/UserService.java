@@ -82,7 +82,6 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    //Update a user
     @Transactional
     public void updateUser(Long userId, UserDto userDto) {
         // Retrieve the current user data
