@@ -144,9 +144,15 @@ public List<UserDto> findAllUsers() {
             user.setRole(role);
         }
 
+        // Update profile image only if provided
+        if (userDto.getProfileImage() != null && userDto.getProfileImage().length > 0) {
+            user.setProfileImage(userDto.getProfileImage());
+        }
+
         // Save the updated user
         userRepository.save(user);
     }
+
 
     //Delete a user
     @Transactional
