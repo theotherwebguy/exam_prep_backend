@@ -88,20 +88,16 @@ public List<UserDto> findAllUsers() {
         UserDto userDto = new UserDto();
         userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
-        userDto.setPassword(user.getPassword()); // Ideally, you may want to exclude passwords in DTOs for security reasons
+        userDto.setPassword(user.getPassword());
         userDto.setTitle(user.getTitle());
         userDto.setFullNames(user.getFullNames());
         userDto.setSurname(user.getSurname());
         userDto.setContactNumber(user.getContactNumber());
-        userDto.setRole(user.getRole().getName()); // Assuming Role has a "name" field
+        userDto.setRole(user.getRole().getName());
 
-        // Convert profile image byte[] to Base64 encoded string
-        if (user.getProfileImage() != null) {
-            String profileImageBase64 = Base64.getEncoder().encodeToString(user.getProfileImage());
-            userDto.setProfileImage(profileImageBase64.getBytes());
-        }
+        // Return the image as byte[] without converting to Base64
+        userDto.setProfileImage(user.getProfileImage());
 
-        // You can map other fields like course IDs here if needed
         if (user.getCourses() != null) {
             List<Long> courseIds = user.getCourses().stream()
                     .map(Course::getCourseId)
