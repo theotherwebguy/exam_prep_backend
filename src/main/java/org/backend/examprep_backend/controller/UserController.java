@@ -129,10 +129,17 @@ public class UserController {
 
     }
 
-    // Update user
-    @PutMapping("/update/{userId}")
-    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
+    // Update user with optional image update
+    @PutMapping(value = "/update/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long userId,
+            @RequestPart("userDetails") String userDetailsJson,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         try {
+            // Parse the user details JSON string into a UserDto object
+            ObjectMapper objectMapper = new ObjectMapper();
+            UserDto userDto = objectMapper.readValue(userDetailsJson, UserDto.class);
+
             // Retrieve the current user data
             Users currentUser = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -155,6 +162,13 @@ public class UserController {
             }
             if (userDto.getRole() == null) {
                 userDto.setRole(currentUser.getRole().getName());
+            }
+
+            // Check if profile image is provided, update if so
+            if (profileImage != null && !profileImage.isEmpty()) {
+                userDto.setProfileImage(profileImage.getBytes()); // Convert the image to byte[]
+            } else {
+                userDto.setProfileImage(currentUser.getProfileImage()); // Retain the existing image if none is provided
             }
 
             // Proceed to update the user with the populated userDto
