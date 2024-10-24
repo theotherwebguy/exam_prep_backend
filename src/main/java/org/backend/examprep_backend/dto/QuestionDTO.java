@@ -12,9 +12,6 @@ public class QuestionDTO {
     private Long courseId;
 
     @Getter @Setter
-    private Long domainId;
-
-    @Getter @Setter
     private Long topicId;
 
     @Getter @Setter
