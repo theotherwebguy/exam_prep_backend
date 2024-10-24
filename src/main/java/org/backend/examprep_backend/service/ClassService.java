@@ -126,6 +126,7 @@ public class ClassService {
             CourseResponseDTO courseDTO = new CourseResponseDTO();
             courseDTO.setCourseId(classes.getCourse().getCourseId());
             courseDTO.setCourseName(classes.getCourse().getCourseName());
+            courseDTO.setImage(classes.getCourse().getImage());
             courseDTO.setCourseDescription(classes.getCourse().getCourseDescription());
             dto.setCourse(courseDTO);
         }
@@ -148,6 +149,7 @@ public class ClassService {
         dto.setFullName(student.getFullNames());
         dto.setEmail(student.getEmail());
         dto.setContactNumber(student.getContactNumber());
+        dto.setSurname(student.getSurname());
         return dto;
     }
 
