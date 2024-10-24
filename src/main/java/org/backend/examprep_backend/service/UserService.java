@@ -169,6 +169,7 @@ public List<UserDto> findAllUsers() {
     }
 
     // Authenticate a user
+    @Transactional(readOnly = true)
     public boolean authenticateUser(String email, String password) {
         Optional<Users> userOptional = userRepository.findByEmail(email);
 
