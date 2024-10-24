@@ -35,11 +35,6 @@ public class QuestionService {
             throw new RuntimeException("Course not found");
         }
 
-        // Validate the domain
-        Optional<Domain> optionalDomain = domainRepository.findById(questionDTO.getDomainId());
-        if (optionalDomain.isEmpty()) {
-            throw new RuntimeException("Domain not found under this course");
-        }
 
         // Validate the topic
         Optional<Topic> optionalTopic = topicRepository.findById(questionDTO.getTopicId());
