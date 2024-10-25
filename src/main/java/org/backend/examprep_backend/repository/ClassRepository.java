@@ -25,4 +25,6 @@ public interface ClassRepository extends JpaRepository<Classes, Long> {
         """)
     List<Classes> findAllClassesWithStudents();
 
+    // Custom method to find classes by lecturer ID
+    List<Classes> findByLecturerId(Long lecturerId);
 }

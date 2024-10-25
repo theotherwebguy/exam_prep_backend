@@ -67,13 +67,18 @@ public class StudentExcelParserService {
                             newStudent.setContactNumber(getCellValueAsString(row.getCell(columnIndexMap.get("Contact Number"))));
                             newStudent.setPassword(passwordEncoder.encode(defaultPassword));
                             newStudent.setRole(studentRole);
-                            return newStudent;
+
+                            // Save the new student to the database
+                            return userRepository.save(newStudent);
                         });
 
 
                 // Add the class to the student's class set
                 student.getStudentClasses().add(studentClass);
                 studentClass.getStudents().add(student);
+
+                // Save the updated student with the class relation
+                userRepository.save(student);
 
                 students.add(student);
             }

@@ -7,8 +7,7 @@ public class CourseResponseDTO {
     private Long courseId;
     private String courseName;
     private String courseDescription;
-    private byte[] image;
-
+    private byte[] image;  // Image URL
     // Getters and Setters
 }
 
