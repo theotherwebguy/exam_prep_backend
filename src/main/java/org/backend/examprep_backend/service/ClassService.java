@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -202,22 +203,43 @@ public class ClassService {
     }
 
     @Transactional
-    public List<ClassResponseDTO> getClassesForLecturer(Long lecturerId) {
-        // Step 1: Fetch the lecturer by ID to validate if the user exists and is a lecturer
+    public List<LecturerCourseClassesDTO> getCoursesWithClassesForLecturer(Long lecturerId) {
+        // Step 1: Validate that the user exists and is a lecturer
         Users lecturer = userRepository.findById(lecturerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Lecturer not found with id: " + lecturerId));
 
-        // Step 2: Ensure the user is a lecturer
         if (!lecturer.getRole().getName().equalsIgnoreCase("Lecturer")) {
             throw new InvalidRoleException("User is not a Lecturer");
         }
 
-        // Step 3: Fetch classes for the lecturer by their user ID
+        // Step 2: Fetch classes by lecturer ID
         List<Classes> classesForLecturer = classRepository.findByLecturerId(lecturerId);
 
-        // Step 4: Map each class entity to ClassResponseDTO and return
-        return classesForLecturer.stream()
-                .map(this::mapToClassResponseDTO)
+        // Step 3: Group classes by course and map them to LecturerCourseClassesDTO
+        Map<Course, List<Classes>> coursesWithClasses = classesForLecturer.stream()
+                .collect(Collectors.groupingBy(Classes::getCourse));
+
+        // Step 4: Map each course and its associated classes to LecturerCourseClassesDTO
+        return coursesWithClasses.entrySet().stream()
+                .map(entry -> {
+                    Course course = entry.getKey();
+                    List<Classes> classes = entry.getValue();
+
+                    // Create LecturerCourseClassesDTO for each course
+                    LecturerCourseClassesDTO courseDTO = new LecturerCourseClassesDTO();
+                    courseDTO.setCourseId(course.getCourseId());
+                    courseDTO.setCourseName(course.getCourseName());
+                    courseDTO.setCourseDescription(course.getCourseDescription());
+                    courseDTO.setImage(course.getImage());
+
+                    // Map classes under this course to ClassResponseDTO
+                    List<ClassResponseDTO> classDTOs = classes.stream()
+                            .map(this::mapToClassResponseDTO)
+                            .collect(Collectors.toList());
+                    courseDTO.setClasses(classDTOs);
+
+                    return courseDTO;
+                })
                 .collect(Collectors.toList());
     }
 
