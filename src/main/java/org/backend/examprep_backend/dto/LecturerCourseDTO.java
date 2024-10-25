@@ -5,12 +5,13 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class LecturerCourseClassesDTO {
+public class LecturerCourseDTO {
     private Long courseId;
     private String courseName;
     private String courseDescription;
     private byte[] image;
-    private List<ClassResponseDTO> classes; // List of classes under this course
+
+    private List<ClassWithStudentsDTO> classes;
+
     // Getters and Setters
 }
-

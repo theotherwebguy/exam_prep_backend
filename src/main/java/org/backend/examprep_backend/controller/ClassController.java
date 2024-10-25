@@ -144,11 +144,7 @@ public class ClassController {
         return ResponseEntity.ok(updatedClass);
     }
 
-//    @GetMapping("/lecturer/{lecturerId}")
-//    public ResponseEntity<List<ClassResponseDTO>> getClassesByLecturer(@PathVariable Long lecturerId) {
-//        List<ClassResponseDTO> classes = classService.getClassesForLecturer(lecturerId);
-//        return ResponseEntity.ok(classes);
-//    }
+
 
     @DeleteMapping("/with-students/{classId}")
     public ResponseEntity<String> deleteClass(@PathVariable Long classId) {
@@ -156,10 +152,10 @@ public class ClassController {
         return ResponseEntity.ok("Class deleted successfully.");
     }
 
-    @GetMapping("/lecturer/{lecturerId}/courses-classes")
-    public ResponseEntity<List<LecturerCourseClassesDTO>> getCoursesWithClassesByLecturer(@PathVariable Long lecturerId) {
-        List<LecturerCourseClassesDTO> coursesWithClasses = classService.getCoursesWithClassesForLecturer(lecturerId);
-        return ResponseEntity.ok(coursesWithClasses);
+    @GetMapping("/{lecturerId}/details")
+    public ResponseEntity<LecturerClassCourseDTO> getCourseDetailsForLecturer(@PathVariable Long lecturerId) {
+        LecturerClassCourseDTO lecturerDetails = classService.getCourseDetailsForLecturer(lecturerId);
+        return ResponseEntity.ok(lecturerDetails);
     }
 
 
