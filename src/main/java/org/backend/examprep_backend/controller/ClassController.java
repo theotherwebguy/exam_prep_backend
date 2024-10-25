@@ -147,7 +147,11 @@ public class ClassController {
         return ResponseEntity.ok(updatedClass);
     }
 
-
+    @GetMapping("/lecturer/{lecturerId}")
+    public ResponseEntity<List<ClassResponseDTO>> getClassesByLecturer(@PathVariable Long lecturerId) {
+        List<ClassResponseDTO> classes = classService.getClassesForLecturer(lecturerId);
+        return ResponseEntity.ok(classes);
+    }
 
     @DeleteMapping("/with-students/{classId}")
     public ResponseEntity<String> deleteClass(@PathVariable Long classId) {
