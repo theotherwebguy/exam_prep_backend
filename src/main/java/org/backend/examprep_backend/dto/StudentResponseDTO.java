@@ -9,7 +9,6 @@ public class StudentResponseDTO {
     private String surname;
     private String email;
     private String contactNumber;
-    private String surname;
 
     // Getters and Setters
 }
