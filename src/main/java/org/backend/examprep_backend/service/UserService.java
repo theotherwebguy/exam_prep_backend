@@ -73,13 +73,8 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
-//    // Gt all users
-//    @Transactional(readOnly = true)
-//    public List<Users> getAllUsers() {
-//        return userRepository.findAll();
-//    }
-@Transactional(readOnly = true)
-public List<UserDto> findAllUsers() {
+    @Transactional(readOnly = true)
+    public List<UserDto> findAllUsers() {
     return userRepository.findAll().stream()
             .map(this::mapToUserDto)
             .collect(Collectors.toList());
@@ -107,7 +102,6 @@ public List<UserDto> findAllUsers() {
 
         return userDto;
     }
-
 
     @Transactional
     public void updateUser(Long userId, UserDto userDto) {
@@ -152,7 +146,6 @@ public List<UserDto> findAllUsers() {
         // Save the updated user
         userRepository.save(user);
     }
-
 
     //Delete a user
     @Transactional
