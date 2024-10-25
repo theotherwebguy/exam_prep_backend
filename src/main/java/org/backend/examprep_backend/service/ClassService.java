@@ -125,6 +125,7 @@ public class ClassService {
         if (classes.getCourse() != null) {
             CourseResponseDTO courseDTO = new CourseResponseDTO();
             courseDTO.setCourseId(classes.getCourse().getCourseId());
+            courseDTO.setImage(classes.getCourse().getImage());
             courseDTO.setCourseName(classes.getCourse().getCourseName());
             courseDTO.setCourseDescription(classes.getCourse().getCourseDescription());
             dto.setCourse(courseDTO);
@@ -148,6 +149,7 @@ public class ClassService {
         dto.setFullName(student.getFullNames());
         dto.setEmail(student.getEmail());
         dto.setContactNumber(student.getContactNumber());
+        dto.setSurname(student.getSurname());
         return dto;
     }
 
@@ -199,6 +201,25 @@ public class ClassService {
         classRepository.deleteById(classId);
     }
 
+    @Transactional
+    public List<ClassResponseDTO> getClassesForLecturer(Long lecturerId) {
+        // Step 1: Fetch the lecturer by ID to validate if the user exists and is a lecturer
+        Users lecturer = userRepository.findById(lecturerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lecturer not found with id: " + lecturerId));
+
+        // Step 2: Ensure the user is a lecturer
+        if (!lecturer.getRole().getName().equalsIgnoreCase("Lecturer")) {
+            throw new InvalidRoleException("User is not a Lecturer");
+        }
+
+        // Step 3: Fetch classes for the lecturer by their user ID
+        List<Classes> classesForLecturer = classRepository.findByLecturerId(lecturerId);
+
+        // Step 4: Map each class entity to ClassResponseDTO and return
+        return classesForLecturer.stream()
+                .map(this::mapToClassResponseDTO)
+                .collect(Collectors.toList());
+    }
 
 
 }
