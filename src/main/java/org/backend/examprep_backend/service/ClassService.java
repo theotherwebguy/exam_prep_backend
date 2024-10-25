@@ -181,7 +181,6 @@ public class ClassService {
             }
             existingClass.setLecturer(lecturer);
         }
-
         // Update start and end dates if provided
         if (classRequestDTO.getStartDate() != null) {
             existingClass.setStartDate(classRequestDTO.getStartDate());
