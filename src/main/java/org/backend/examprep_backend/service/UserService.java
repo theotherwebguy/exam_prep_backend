@@ -73,13 +73,8 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
-//    // Gt all users
-//    @Transactional(readOnly = true)
-//    public List<Users> getAllUsers() {
-//        return userRepository.findAll();
-//    }
-@Transactional(readOnly = true)
-public List<UserDto> findAllUsers() {
+    @Transactional(readOnly = true)
+    public List<UserDto> findAllUsers() {
     return userRepository.findAll().stream()
             .map(this::mapToUserDto)
             .collect(Collectors.toList());
@@ -107,7 +102,6 @@ public List<UserDto> findAllUsers() {
 
         return userDto;
     }
-
 
     @Transactional
     public void updateUser(Long userId, UserDto userDto) {
@@ -153,7 +147,6 @@ public List<UserDto> findAllUsers() {
         userRepository.save(user);
     }
 
-
     //Delete a user
     @Transactional
     public void deleteUser(Long userId) {
@@ -168,15 +161,15 @@ public List<UserDto> findAllUsers() {
         return userRepository.findByEmailOrContactNumber(email, contactNumber);
     }
 
-    // Authenticate a user
     @Transactional(readOnly = true)
-    public boolean authenticateUser(String email, String password) {
+    public UserDto authenticateUser(String email, String password) {
         Optional<Users> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
             Users user = userOptional.get();
             if (passwordEncoder.matches(password, user.getPassword())) {
-                return true; // Password matches
+                // Map Users to UserDto excluding the password
+                return mapUserToDto(user);
             } else {
                 throw new IllegalArgumentException("Invalid email or password.");
             }
@@ -184,6 +177,22 @@ public List<UserDto> findAllUsers() {
             throw new IllegalArgumentException("User not found with the provided email.");
         }
     }
+
+    // Helper method to map Users entity to UserDto
+    private UserDto mapUserToDto(Users user) {
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setEmail(user.getEmail());
+        userDto.setTitle(user.getTitle());
+        userDto.setFullNames(user.getFullNames());
+        userDto.setSurname(user.getSurname());
+        userDto.setContactNumber(user.getContactNumber());
+        userDto.setRole(user.getRole().getName()); // Get role name, not ID
+        userDto.setProfileImage(user.getProfileImage());
+        userDto.setCourseIds(user.getCourses().stream().map(Course::getCourseId).collect(Collectors.toList()));
+        return userDto;
+    }
+
 
     // Assign courses to a user
     @Transactional
