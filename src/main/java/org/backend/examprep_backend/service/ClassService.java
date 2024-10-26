@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -180,7 +181,6 @@ public class ClassService {
             }
             existingClass.setLecturer(lecturer);
         }
-
         // Update start and end dates if provided
         if (classRequestDTO.getStartDate() != null) {
             existingClass.setStartDate(classRequestDTO.getStartDate());
@@ -202,24 +202,79 @@ public class ClassService {
     }
 
     @Transactional
-    public List<ClassResponseDTO> getClassesForLecturer(Long lecturerId) {
-        // Step 1: Fetch the lecturer by ID to validate if the user exists and is a lecturer
+    public LecturerClassCourseDTO getCourseDetailsForLecturer(Long lecturerId) {
+        // Validate that the lecturer exists and is assigned the correct role
         Users lecturer = userRepository.findById(lecturerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Lecturer not found with id: " + lecturerId));
 
-        // Step 2: Ensure the user is a lecturer
         if (!lecturer.getRole().getName().equalsIgnoreCase("Lecturer")) {
             throw new InvalidRoleException("User is not a Lecturer");
         }
 
-        // Step 3: Fetch classes for the lecturer by their user ID
+        // Prepare the lecturer information
+        LecturerClassCourseDTO lecturerDTO = new LecturerClassCourseDTO();
+        lecturerDTO.setLecturerId(lecturer.getId());
+        lecturerDTO.setLecturerName(lecturer.getFullNames());
+        lecturerDTO.setLecturerEmail(lecturer.getEmail());
+        lecturerDTO.setLecturerContactNumber(lecturer.getContactNumber());
+
+        // Fetch all classes taught by the lecturer
         List<Classes> classesForLecturer = classRepository.findByLecturerId(lecturerId);
 
-        // Step 4: Map each class entity to ClassResponseDTO and return
-        return classesForLecturer.stream()
-                .map(this::mapToClassResponseDTO)
+        // Group classes by course to avoid redundant course information
+        Map<Course, List<Classes>> coursesWithClasses = classesForLecturer.stream()
+                .collect(Collectors.groupingBy(Classes::getCourse));
+
+        // Build the list of courses with their classes
+        List<LecturerCourseDTO> courseDTOs = coursesWithClasses.entrySet().stream()
+                .map(entry -> {
+                    Course course = entry.getKey();
+                    List<Classes> classes = entry.getValue();
+
+                    // Create a LecturerCourseDTO for each course
+                    LecturerCourseDTO courseDTO = new LecturerCourseDTO();
+                    courseDTO.setCourseId(course.getCourseId());
+                    courseDTO.setCourseName(course.getCourseName());
+                    courseDTO.setCourseDescription(course.getCourseDescription());
+                    courseDTO.setImage(course.getImage());
+
+                    // Map each class under this course to ClassWithStudentsDTO with student data
+                    List<ClassWithStudentsDTO> classDTOs = classes.stream()
+                            .map(classEntity -> {
+                                ClassWithStudentsDTO classDTO = new ClassWithStudentsDTO();
+                                classDTO.setClassId(classEntity.getClassesId());
+                                classDTO.setClassName(classEntity.getClassName());
+                                classDTO.setClassDescription(classEntity.getClassDescription());
+                                classDTO.setStartDate(classEntity.getStartDate());
+                                classDTO.setEndDate(classEntity.getEndDate());
+
+                                // Map students under each class
+                                List<StudentResponseDTO> studentDTOs = classEntity.getStudents().stream()
+                                        .map(student -> {
+                                            StudentResponseDTO studentDTO = new StudentResponseDTO();
+                                            studentDTO.setStudentId(student.getId());
+                                            studentDTO.setFullName(student.getFullNames());
+                                            studentDTO.setSurname(student.getSurname());
+                                            studentDTO.setEmail(student.getEmail());
+                                            studentDTO.setContactNumber(student.getContactNumber());
+                                            return studentDTO;
+                                        })
+                                        .collect(Collectors.toList());
+                                classDTO.setStudents(studentDTOs);
+
+                                return classDTO;
+                            })
+                            .collect(Collectors.toList());
+
+                    courseDTO.setClasses(classDTOs);
+                    return courseDTO;
+                })
                 .collect(Collectors.toList());
+
+        lecturerDTO.setCourses(courseDTOs);
+        return lecturerDTO;
     }
+
 
 
 }

@@ -1,5 +1,7 @@
 package org.backend.examprep_backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.backend.examprep_backend.dto.QuestionDTO;
 import org.backend.examprep_backend.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +16,11 @@ public class QuestionController {
     private QuestionService questionService;
 
     @PostMapping("/add")
-    public ResponseEntity<String> addQuestion(@RequestBody QuestionDTO questionDTO) {
+    @Operation(summary = "Add a new question", description = "Adds a new question of various types. Supports PDF upload for scenario and image-based questions.")
+    @ApiResponse(responseCode = "200", description = "Question added successfully")
+    public ResponseEntity<String> addQuestion(@ModelAttribute QuestionDTO questionDTO) throws Exception {
         questionService.addQuestion(questionDTO);
         return ResponseEntity.ok("Question added successfully");
     }
+
 }
