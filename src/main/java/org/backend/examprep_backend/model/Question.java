@@ -1,8 +1,10 @@
 package org.backend.examprep_backend.model;
 
 import jakarta.persistence.*;
-import java.util.List;
+import lombok.Data;
 
+import java.util.List;
+@Data
 @Entity
 @Table(name = "question")
 public class Question {
@@ -22,36 +24,11 @@ public class Question {
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Answer> answers;
 
+    private String questionType; // "MULTIPLE_CHOICE", "TRUE_FALSE", "SCENARIO", "IMAGE_BASED"
+    private String instruction;
+
+    private String pdfUrl;
+
+    private Boolean correctAnswer;
     // Getters and Setters
-    public Long getQuestionId() {
-        return questionId;
-    }
-
-    public void setQuestionId(Long questionId) {
-        this.questionId = questionId;
-    }
-
-    public String getQuestionText() {
-        return questionText;
-    }
-
-    public void setQuestionText(String questionText) {
-        this.questionText = questionText;
-    }
-
-    public Topic getTopic() {
-        return topic;
-    }
-
-    public void setTopic(Topic topic) {
-        this.topic = topic;
-    }
-
-    public List<Answer> getAnswers() {
-        return answers;
-    }
-
-    public void setAnswers(List<Answer> answers) {
-        this.answers = answers;
-    }
 }
