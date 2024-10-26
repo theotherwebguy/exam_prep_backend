@@ -8,7 +8,6 @@ import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.repository.RoleRepository;
 import org.backend.examprep_backend.repository.UserRepository;
 import org.backend.examprep_backend.service.UserService;
-import org.hibernate.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -17,11 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -229,20 +226,16 @@ public class UserController {
 
     }
 
+    // Authenticate user and return user details
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam String email, @RequestParam String password) {
-        System.out.println("Login attempt for email: " + email);
 
         try {
-            boolean isAuthenticated = userService.authenticateUser(email, password);
+            UserDto userDto = userService.authenticateUser(email, password);
 
-            if (isAuthenticated) {
-                System.out.println("Login successful for user: " + email);
-                return ResponseEntity.ok("Login successful.");
-            } else {
-                System.out.println("Authentication failed for user: " + email);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password.");
-            }
+            System.out.println("Login successful for user: " + email);
+            return ResponseEntity.ok(userDto); // Return user info (without password)
+
         } catch (IllegalArgumentException e) {
             System.out.println("Error during login for email: " + email + ": " + e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
@@ -252,4 +245,5 @@ public class UserController {
                     .body("An unexpected error occurred. Please try again. " + e.getMessage());
         }
     }
+
 }
