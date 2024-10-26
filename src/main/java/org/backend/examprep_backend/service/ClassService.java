@@ -151,6 +151,7 @@ public class ClassService {
         dto.setEmail(student.getEmail());
         dto.setContactNumber(student.getContactNumber());
         dto.setSurname(student.getSurname());
+        dto.setProfileImage(student.getProfileImage());
         return dto;
     }
 
@@ -181,6 +182,7 @@ public class ClassService {
             }
             existingClass.setLecturer(lecturer);
         }
+
         // Update start and end dates if provided
         if (classRequestDTO.getStartDate() != null) {
             existingClass.setStartDate(classRequestDTO.getStartDate());
@@ -256,6 +258,7 @@ public class ClassService {
                                             studentDTO.setFullName(student.getFullNames());
                                             studentDTO.setSurname(student.getSurname());
                                             studentDTO.setEmail(student.getEmail());
+                                            studentDTO.setProfileImage(student.getProfileImage());
                                             studentDTO.setContactNumber(student.getContactNumber());
                                             return studentDTO;
                                         })

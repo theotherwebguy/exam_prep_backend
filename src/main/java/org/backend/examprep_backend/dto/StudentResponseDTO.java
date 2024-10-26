@@ -9,7 +9,7 @@ public class StudentResponseDTO {
     private String surname;
     private String email;
     private String contactNumber;
-
+    private byte[] profileImage;
     // Getters and Setters
 }
 
