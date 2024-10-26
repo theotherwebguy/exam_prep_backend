@@ -18,7 +18,7 @@ public class Classes {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long classesId;
 
-    @Column(length = 255)
+    @Column(length = 255, unique = true)
     private String className;
 
     @Column(length = 255)
@@ -35,6 +35,7 @@ public class Classes {
     @JoinColumn(name = "userId", nullable = false)
     private Users lecturer;
 
+    @Column(nullable = false)
     @ManyToMany(mappedBy = "studentClasses")
     private Set<Users> students = new HashSet<>();
 
