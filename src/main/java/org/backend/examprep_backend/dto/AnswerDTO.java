@@ -1,15 +1,15 @@
 package org.backend.examprep_backend.dto;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+@Data
 public class AnswerDTO {
     // Getters and Setters
-    @Getter
-    @Setter
+
     private String answerText;
-    @Setter
-    @Getter
+
     private String answerDescription;
     private boolean isCorrect;
 
@@ -17,7 +17,4 @@ public class AnswerDTO {
         return isCorrect;
     }
 
-    public void setCorrect(boolean correct) {
-        isCorrect = correct;
-    }
 }

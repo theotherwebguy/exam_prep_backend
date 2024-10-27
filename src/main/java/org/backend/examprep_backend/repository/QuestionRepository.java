@@ -11,4 +11,7 @@ import java.util.List;
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findByTopic(Topic topic);  // Find questions by topic
     Page<Question> findByTopic(Topic topic, Pageable pageable);  // Find paginated questions by topic
+
+    // Custom query method to find questions by topic ID
+    List<Question> findByTopic_TopicId(Long topicId);
 }

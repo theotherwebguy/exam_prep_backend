@@ -8,4 +8,6 @@ public class LecturerDTO {
     private Long lecturerId;
     private String lecturerName;
     private String lecturerEmail;
+    private String contactNumber;
+
 }
