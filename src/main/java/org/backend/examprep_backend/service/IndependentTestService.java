@@ -1,14 +1,20 @@
 package org.backend.examprep_backend.service;
 
+import org.backend.examprep_backend.dto.CourseDTO;
+import org.backend.examprep_backend.dto.DomainDTO;
 import org.backend.examprep_backend.dto.IndependentTestDTO;
+import org.backend.examprep_backend.dto.TopicDTO;
 import org.backend.examprep_backend.model.IndependentTest;
 import org.backend.examprep_backend.model.Topic;
 import org.backend.examprep_backend.model.Question;
+import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.repository.IndependentTestRepository;
 import org.backend.examprep_backend.repository.TopicRepository;
 import org.backend.examprep_backend.repository.QuestionRepository;
+import org.backend.examprep_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +31,9 @@ public class IndependentTestService {
 
     @Autowired
     private QuestionRepository questionRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     // Fetch and create a test while fetching Domain, Topic, and Questions
     public IndependentTestDTO createTestWithDetails(IndependentTestDTO testDTO) {
@@ -97,6 +106,42 @@ public class IndependentTestService {
                     return convertToDTO(test, questions);
                 })
                 .collect(Collectors.toList());
+    }
+
+
+    // Method to fetch courses for a specific user by their ID
+    @Transactional
+    public List<CourseDTO> getCoursesByUserId(Long userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return user.getCourses().stream().map(course -> {
+            CourseDTO courseDTO = new CourseDTO();
+            courseDTO.setCourseId(course.getCourseId());
+            courseDTO.setCourseName(course.getCourseName());
+            courseDTO.setCourseDescription(course.getCourseDescription());
+
+            // Fetch and set domains and topics
+            List<DomainDTO> domainDTOList = course.getDomains().stream().map(domain -> {
+                DomainDTO domainDTO = new DomainDTO();
+                domainDTO.setDomainId(domain.getDomainId());
+                domainDTO.setDomainName(domain.getDomainName());
+
+                // Fetch and set topics for each domain
+                List<TopicDTO> topicDTOList = domain.getTopics().stream().map(topic -> {
+                    TopicDTO topicDTO = new TopicDTO();
+                    topicDTO.setTopicId(topic.getTopicId());
+                    topicDTO.setTopicName(topic.getTopicName());
+                    return topicDTO;
+                }).collect(Collectors.toList());
+
+                domainDTO.setTopics(topicDTOList);
+                return domainDTO;
+            }).collect(Collectors.toList());
+
+            courseDTO.setDomains(domainDTOList);
+            return courseDTO;
+        }).collect(Collectors.toList());
     }
 
 }
