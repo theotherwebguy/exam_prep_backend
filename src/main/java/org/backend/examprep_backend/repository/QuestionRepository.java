@@ -13,5 +13,5 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     Page<Question> findByTopic(Topic topic, Pageable pageable);  // Find paginated questions by topic
 
     // Custom query method to find questions by topic ID
-    List<Question> findByTopic_TopicId(Long topicId);
+    List<Question> findByTopicId(Long topicId);
 }

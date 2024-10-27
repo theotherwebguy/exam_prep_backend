@@ -1,6 +1,7 @@
 package org.backend.examprep_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.backend.examprep_backend.dto.UserDto;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Role;
@@ -112,6 +113,7 @@ public class UserController {
 
 
     // Get user by ID
+    @Transactional
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserById(@PathVariable Long userId) {
         try {
