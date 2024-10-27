@@ -24,11 +24,24 @@ public class Question {
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Answer> answers;
 
-    private String questionType; // "MULTIPLE_CHOICE", "TRUE_FALSE", "SCENARIO", "IMAGE_BASED"
-    private String instruction;
 
-    private String pdfUrl;
+    @Column(columnDefinition = "text", nullable = true)
+    private String instruction; // Optional but required if PDF is used
+
+    @Enumerated(EnumType.STRING)
+    private QuestionType questionType; // Enum for question type
+
+    @Lob
+    private byte[] pdfFile; // Store the PDF as a byte array if needed for SCENARIO_WITH_IMAGE
 
     private Boolean correctAnswer;
     // Getters and Setters
+
+    @PrePersist
+    @PreUpdate
+    private void validateInstructionWithPdf() {
+        if (questionType == QuestionType.SCENARIO_WITH_PDF && pdfFile == null) {
+            throw new IllegalStateException("PDF file is required for scenario-based questions.");
+        }
+    }
 }
