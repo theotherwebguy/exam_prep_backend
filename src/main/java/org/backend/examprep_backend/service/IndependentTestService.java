@@ -120,6 +120,7 @@ public class IndependentTestService {
             courseDTO.setCourseId(course.getCourseId());
             courseDTO.setCourseName(course.getCourseName());
             courseDTO.setCourseDescription(course.getCourseDescription());
+            courseDTO.setImage(course.getImage());
 
             // Fetch and set domains and topics
             List<DomainDTO> domainDTOList = course.getDomains().stream().map(domain -> {

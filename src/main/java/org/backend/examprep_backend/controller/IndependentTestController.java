@@ -67,6 +67,7 @@ public class IndependentTestController {
             courseDTO.setCourseName(course.getCourseName());
             courseDTO.setCourseDescription(course.getCourseDescription());
             courseDTO.setDomains(course.getDomains()); // Now includes domains and topics
+            courseDTO.setImage(course.getImage());
 
             // Include image if requested
             if (includeImage) {
