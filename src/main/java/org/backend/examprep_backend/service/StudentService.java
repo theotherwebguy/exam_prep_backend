@@ -2,6 +2,7 @@ package org.backend.examprep_backend.service;
 
 import org.backend.examprep_backend.InvalidRoleException;
 import org.backend.examprep_backend.ResourceNotFoundException;
+import org.backend.examprep_backend.dto.LecturerDTO;
 import org.backend.examprep_backend.dto.StudentClassCourseDTO;
 import org.backend.examprep_backend.dto.StudentClassDTO;
 import org.backend.examprep_backend.dto.StudentCourseDTO;
@@ -28,8 +29,8 @@ public class StudentService {
 
     @Transactional
     public StudentClassCourseDTO getCourseDetailsForStudent(Long studentId) {
-        // Fetch the student along with their classes and courses
-        Users student = userRepository.findStudentWithClassesAndCourses(studentId)
+        // Fetch the student with classes, courses, and lecturers
+        Users student = userRepository.findStudentWithClassesCoursesAndLecturers(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
         // Prepare the student information
@@ -57,7 +58,7 @@ public class StudentService {
                     courseDTO.setCourseDescription(course.getCourseDescription());
                     courseDTO.setImage(course.getImage());
 
-                    // Map each class under this course
+                    // Map each class and include lecturer details
                     List<StudentClassDTO> classDTOs = classes.stream()
                             .map(classEntity -> {
                                 StudentClassDTO classDTO = new StudentClassDTO();
@@ -66,6 +67,16 @@ public class StudentService {
                                 classDTO.setClassDescription(classEntity.getClassDescription());
                                 classDTO.setStartDate(classEntity.getStartDate());
                                 classDTO.setEndDate(classEntity.getEndDate());
+
+                                // Map lecturer details for the class
+                                LecturerDTO lecturerDTO = new LecturerDTO();
+                                Users lecturer = classEntity.getLecturer();
+                                lecturerDTO.setLecturerId(lecturer.getId());
+                                lecturerDTO.setLecturerName(lecturer.getFullNames());
+                                lecturerDTO.setLecturerEmail(lecturer.getEmail());
+                                lecturerDTO.setContactNumber(lecturer.getContactNumber());
+
+                                classDTO.setLecturer(lecturerDTO);  // Set lecturer in class DTO
                                 return classDTO;
                             })
                             .collect(Collectors.toList());

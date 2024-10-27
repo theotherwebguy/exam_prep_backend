@@ -11,6 +11,7 @@ public class StudentClassDTO {
     private String classDescription;
     private LocalDate startDate;
     private LocalDate endDate;
+    private LecturerDTO lecturer;  // New field for lecturer details
     // Getters and setters
 }
 
