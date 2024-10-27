@@ -49,9 +49,7 @@ public class IndependentTestController {
     }
 
 
-
     //fetch course by independent student id
-
     @GetMapping("/{studentId}/courses")
     @Transactional
     public ResponseEntity<List<CourseDTO>> getCoursesByUserId(
