@@ -39,7 +39,6 @@ public class IndependentTestService {
     public IndependentTestDTO createTestWithDetails(IndependentTestDTO testDTO) {
         IndependentTest test = new IndependentTest();
         test.setTestName(testDTO.getTestName());
-        test.setTotalGrading(testDTO.getTotalGrading());
 
         // Fetch the topic entity using the topicId
         Topic topic = topicRepository.findById(testDTO.getTopicId())
@@ -77,7 +76,6 @@ public class IndependentTestService {
         IndependentTestDTO testDTO = new IndependentTestDTO();
         testDTO.setTestsId(test.getTestsId());
         testDTO.setTestName(test.getTestName());
-        testDTO.setTotalGrading(test.getTotalGrading());
         testDTO.setDomainId(test.getDomainId());
         testDTO.setTopicId(test.getTopicId());
         testDTO.setQuestionCount(test.getQuestionCount());

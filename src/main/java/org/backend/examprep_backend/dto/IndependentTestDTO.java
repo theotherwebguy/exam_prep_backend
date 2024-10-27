@@ -2,6 +2,7 @@ package org.backend.examprep_backend.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.backend.examprep_backend.model.QuestionType;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
 public class IndependentTestDTO {
     private Long testsId;
     private String testName;
-    private int totalGrading;
+    private QuestionType questionType;
     private Long domainId;      // Foreign key reference to Domain
     private Long topicId;
     private List<String> questionTexts; // Foreign key reference to Topic
