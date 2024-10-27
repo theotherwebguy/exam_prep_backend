@@ -1,13 +1,17 @@
 package org.backend.examprep_backend.controller;
 
+import org.backend.examprep_backend.dto.CourseDTO;
 import org.backend.examprep_backend.dto.IndependentTestDTO;
 import org.backend.examprep_backend.service.IndependentTestService;
+import org.backend.examprep_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tests")
@@ -15,6 +19,11 @@ public class IndependentTestController {
 
     @Autowired
     private IndependentTestService testService;
+
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private IndependentTestService independentTestService;
 
     // Endpoint to create a test using DTO and fetching Domain, Topics, and Questions
     @PostMapping("/CreateTests")
@@ -37,5 +46,35 @@ public class IndependentTestController {
     @GetMapping("/GetAllTests")
     public List<IndependentTestDTO> getAllTests() {
         return testService.getAllTests();
+    }
+
+
+
+    //fetch course by independent student id
+
+    @GetMapping("/{studentId}/courses")
+    @Transactional
+    public ResponseEntity<List<CourseDTO>> getCoursesByUserId(
+            @PathVariable Long studentId,
+            @RequestParam(value = "includeImage", defaultValue = "false") boolean includeImage) {
+
+        List<CourseDTO> courses = independentTestService.getCoursesByUserId(studentId);
+
+        // Map to CourseDTO, including image only if requested
+        List<CourseDTO> courseDTOList = courses.stream().map(course -> {
+            CourseDTO courseDTO = new CourseDTO();
+            courseDTO.setCourseId(course.getCourseId());
+            courseDTO.setCourseName(course.getCourseName());
+            courseDTO.setCourseDescription(course.getCourseDescription());
+            courseDTO.setDomains(course.getDomains()); // Now includes domains and topics
+
+            // Include image if requested
+            if (includeImage) {
+                courseDTO.setImage(course.getImage());
+            }
+            return courseDTO;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(courseDTOList);
     }
 }

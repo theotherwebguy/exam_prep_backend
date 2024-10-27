@@ -9,5 +9,4 @@ import java.util.List;
 
 @Repository
 public interface IndependentTestRepository extends JpaRepository<IndependentTest, Long> {
-    List<IndependentTest> findByClasses(Classes classes);  // Find tests by class
 }
