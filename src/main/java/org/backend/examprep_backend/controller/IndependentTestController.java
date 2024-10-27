@@ -55,26 +55,23 @@ public class IndependentTestController {
     @GetMapping("/{studentId}/courses")
     @Transactional
     public ResponseEntity<List<CourseDTO>> getCoursesByUserId(
-            @PathVariable Long studentId,
-            @RequestParam(value = "includeImage", defaultValue = "false") boolean includeImage) {
+            @PathVariable Long studentId) { // Removed the includeImage parameter
 
         List<CourseDTO> courses = independentTestService.getCoursesByUserId(studentId);
 
-        // Map to CourseDTO, including image only if requested
+        // Map to CourseDTO
         List<CourseDTO> courseDTOList = courses.stream().map(course -> {
             CourseDTO courseDTO = new CourseDTO();
             courseDTO.setCourseId(course.getCourseId());
             courseDTO.setCourseName(course.getCourseName());
             courseDTO.setCourseDescription(course.getCourseDescription());
             courseDTO.setDomains(course.getDomains()); // Now includes domains and topics
+            courseDTO.setImage(course.getImage()); // Always include image
 
-            // Include image if requested
-            if (includeImage) {
-                courseDTO.setImage(course.getImage());
-            }
             return courseDTO;
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(courseDTOList);
     }
+
 }
