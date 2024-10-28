@@ -32,4 +32,7 @@ public class Question {
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Answer> answers;  // List of possible answers
 
+    @Column(nullable = false)
+    private boolean isModerated = false;  // Default to false
+
 }

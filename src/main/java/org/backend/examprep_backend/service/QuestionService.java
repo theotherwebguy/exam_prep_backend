@@ -36,6 +36,7 @@ public class QuestionService {
         question.setQuestionText(questionDTO.getQuestionText());
         question.setQuestionType(questionDTO.getQuestionType());
         question.setInstruction(questionDTO.getInstruction());
+        question.setModerated(false);// Always false when created
 
         Topic topic = topicRepository.findById(questionDTO.getTopicId())
                 .orElseThrow(() -> new RuntimeException("Topic not found"));
@@ -107,5 +108,33 @@ public class QuestionService {
         return questionRepository.findByTopic_TopicId(topicId); // Assuming you have a repository method for this
     }
 
+    public List<QuestionDTO> getUnmoderatedQuestionsByCourseId(Long courseId) {
+        List<Question> questions = questionRepository.findUnmoderatedQuestionsByCourseId(courseId);
+        return questions.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public QuestionDTO convertToDTO(Question question) {
+        QuestionDTO dto = new QuestionDTO();
+        dto.setQuestionText(question.getQuestionText());
+        dto.setTopicId(question.getTopic().getTopicId());
+        dto.setQuestionType(question.getQuestionType());
+        dto.setInstruction(question.getInstruction());
+        dto.setPdfFileUrl(question.getPdfFileUrl());
+
+        dto.setAnswers(question.getAnswers().stream()
+                .map(answer -> {
+                    AnswerDTO answerDTO = new AnswerDTO();
+                    answerDTO.setAnswerText(answer.getAnswerText());
+                    answerDTO.setAnswerDescription(answer.getAnswerDescription());
+                    answerDTO.setIsCorrect(answer.isCorrect());
+                    return answerDTO;
+                })
+                .collect(Collectors.toList()));
+
+        return dto;
+    }
 
 }
