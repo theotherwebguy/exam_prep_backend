@@ -52,7 +52,7 @@ public class QuestionService {
                     Answer answer = new Answer();
                     answer.setAnswerText(answerDTO.getAnswerText());
                     answer.setAnswerDescription(answerDTO.getAnswerDescription());
-                    answer.setCorrect(answerDTO.isCorrect());
+                    answer.setCorrect(answerDTO.getIsCorrect());
                     answer.setQuestion(question);
                     return answer;
                 }).collect(Collectors.toList());

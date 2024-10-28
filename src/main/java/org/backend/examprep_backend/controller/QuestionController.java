@@ -73,7 +73,7 @@ public class QuestionController {
                     AnswerDTO answerDTO = new AnswerDTO();
                     answerDTO.setAnswerText(answer.getAnswerText());
                     answerDTO.setAnswerDescription(answer.getAnswerDescription());
-                    answerDTO.setCorrect(answer.isCorrect());
+                    answerDTO.setIsCorrect(answer.isCorrect());
                     return answerDTO;
                 })
                 .collect(Collectors.toList()));
