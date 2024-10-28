@@ -40,4 +40,9 @@ public class Classes {
     private Set<Users> students = new HashSet<>();
 
 
+    // Utility method to remove a student
+    public void removeStudent(Users student) {
+        this.students.remove(student);
+        student.getStudentClasses().remove(this);
+    }
 }

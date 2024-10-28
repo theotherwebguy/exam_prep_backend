@@ -67,12 +67,32 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    // Method to find a user by ID
     @Transactional(readOnly = true)
-    public Users findUserById(Long userId) {
-        return userRepository.findById(userId)
+    public UserDto findUserById(Long userId) {
+        Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Map Users to UserDto
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setEmail(user.getEmail());
+        userDto.setTitle(user.getTitle());
+        userDto.setFullNames(user.getFullNames());
+        userDto.setSurname(user.getSurname());
+        userDto.setContactNumber(user.getContactNumber());
+
+        if (user.getRole() != null) {
+            userDto.setRole(user.getRole().getName());
+        }
+
+        // Set profile image only if it exists
+        if (user.getProfileImage() != null) {
+            userDto.setProfileImage(user.getProfileImage());
+        }
+
+        return userDto;
     }
+
 
     @Transactional(readOnly = true)
     public List<UserDto> findAllUsers() {
