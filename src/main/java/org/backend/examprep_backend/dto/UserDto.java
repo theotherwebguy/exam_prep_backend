@@ -1,4 +1,6 @@
 package org.backend.examprep_backend.dto;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -34,6 +36,7 @@ public class UserDto {
     @NotBlank(message = "Role is required")
     private String role;
 
+    @Column(nullable = true)
     private byte[] profileImage;
 
     private List<Long> courseIds;

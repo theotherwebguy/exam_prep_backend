@@ -2,18 +2,19 @@ package org.backend.examprep_backend.service;
 
 import org.backend.examprep_backend.dto.AnswerDTO;
 import org.backend.examprep_backend.dto.QuestionDTO;
-import org.backend.examprep_backend.model.*;
-import org.backend.examprep_backend.repository.CourseRepository;
-import org.backend.examprep_backend.repository.DomainRepository;
-import org.backend.examprep_backend.repository.TopicRepository;
+import org.backend.examprep_backend.model.Answer;
+import org.backend.examprep_backend.model.Question;
+import org.backend.examprep_backend.model.Topic;
 import org.backend.examprep_backend.repository.QuestionRepository;
+import org.backend.examprep_backend.repository.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Optional;
-import java.util.ArrayList;
+import java.nio.file.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,58 +27,24 @@ public class QuestionService {
     @Autowired
     private TopicRepository topicRepository;
 
-    @Autowired
-    private DomainRepository domainRepository;
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
-    @Autowired
-    private CourseRepository courseRepository;
-
-//    public void addQuestion(QuestionDTO questionDTO) {
-//        // Validate the course
-//        Optional<Course> optionalCourse = courseRepository.findById(questionDTO.getCourseId());
-//        if (optionalCourse.isEmpty()) {
-//            throw new RuntimeException("Course not found");
-//        }
-//
-//
-//        // Validate the topic
-//        Optional<Topic> optionalTopic = topicRepository.findById(questionDTO.getTopicId());
-//        if (optionalTopic.isEmpty()) {
-//            throw new RuntimeException("Topic not found under this domain");
-//        }
-//
-//        Topic topic = optionalTopic.get();
-//
-//        // Create a new Question and associate it with the topic
-//        Question question = new Question();
-//        question.setQuestionText(questionDTO.getQuestionText());
-//        question.setTopic(topic);
-//
-//        // Add answers
-//        List<Answer> answers = new ArrayList<>();
-//        for (AnswerDTO answerDTO : questionDTO.getAnswers()) {
-//            Answer answer = new Answer();
-//            answer.setAnswerText(answerDTO.getAnswerText());
-//            answer.setCorrect(answerDTO.isCorrect());
-//            answer.setAnswerDescription(questionDTO.getAnswerDescription());
-//            answer.setQuestion(question);
-//            answers.add(answer);
-//        }
-//
-//        question.setAnswers(answers);
-//        questionRepository.save(question);
-//    }
-
-    public void saveQuestionWithAnswersAndPdf(QuestionDTO questionDTO, MultipartFile pdfFile) throws IOException {
+    @Transactional // Ensure atomic operations
+    public void saveQuestionWithPdf(QuestionDTO questionDTO, MultipartFile pdfFile) throws IOException {
         Question question = new Question();
         question.setQuestionText(questionDTO.getQuestionText());
         question.setQuestionType(questionDTO.getQuestionType());
-        question.setInstruction(question.getInstruction());
-        question.setTopic(topicRepository.findById(questionDTO.getTopicId())
-                .orElseThrow(() -> new RuntimeException("Topic not found")));
+        question.setInstruction(questionDTO.getInstruction());
+
+        Topic topic = topicRepository.findById(questionDTO.getTopicId())
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        question.setTopic(topic);
 
         if (pdfFile != null && !pdfFile.isEmpty()) {
-            question.setPdfFile(pdfFile.getBytes());
+            validatePdfFile(pdfFile); // Ensure it’s a valid PDF
+            String pdfFilePath = saveFileToLocalDirectory(pdfFile);
+            question.setPdfFileUrl(pdfFilePath);
         }
 
         List<Answer> answers = questionDTO.getAnswers().stream()
@@ -93,5 +60,52 @@ public class QuestionService {
         question.setAnswers(answers);
         questionRepository.save(question);
     }
+
+    private String saveFileToLocalDirectory(MultipartFile file) throws IOException {
+        Path directoryPath = Paths.get(uploadDir);
+        if (Files.notExists(directoryPath)) {
+            Files.createDirectories(directoryPath);
+        }
+
+        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path filePath = directoryPath.resolve(fileName);
+
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        return filePath.toString();
+    }
+
+    private void validatePdfFile(MultipartFile file) {
+        if (!file.getContentType().equals("application/pdf")) {
+            throw new IllegalArgumentException("Uploaded file must be a PDF.");
+        }
+    }
+
+//    @Transactional
+//    public List<QuestionDTO> getQuestionsByTopicId(Long topicId) {
+//        List<Question> questions = questionRepository.findByTopic_TopicId(topicId);
+//        return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
+//    }
+//
+//    private QuestionDTO convertToDTO(Question question) {
+//        QuestionDTO dto = new QuestionDTO();
+//        dto.setQuestionText(question.getQuestionText());
+//        dto.setTopicId(question.getTopic().getTopicId());
+//        dto.setQuestionType(question.getQuestionType());
+//        dto.setInstruction(question.getInstruction());
+//
+//
+//
+//        dto.setPdfFile(null); // Handle PDF as needed
+//        dto.setAnswers(question.getAnswers().stream()
+//                .map(answer -> new AnswerDTO(answer.getAnswerText(), answer.isCorrect(), answer.getAnswerDescription()))
+//                .collect(Collectors.toList()));
+//        return dto;
+//    }
+
+    @Transactional
+    public List<Question> getQuestionsByTopicId(Long topicId) {
+        return questionRepository.findByTopic_TopicId(topicId); // Assuming you have a repository method for this
+    }
+
 
 }
