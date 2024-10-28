@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -78,6 +79,13 @@ public class QuestionController {
                 })
                 .collect(Collectors.toList()));
         return dto;
+    }
+
+    @Transactional
+    @GetMapping("/unmoderated/{courseId}")
+    public ResponseEntity<List<QuestionDTO>> getUnmoderatedQuestionsByCourseId(@PathVariable Long courseId) {
+        List<QuestionDTO> questionDTOs = questionService.getUnmoderatedQuestionsByCourseId(courseId);
+        return ResponseEntity.ok(questionDTOs);
     }
 
 }
