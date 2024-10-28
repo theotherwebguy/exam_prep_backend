@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class AnswerDTO {
 
     private String answerText;
-    private boolean isCorrect;
+    private Boolean isCorrect;
     private String answerDescription;
 }
