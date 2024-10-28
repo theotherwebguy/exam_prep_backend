@@ -19,9 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -197,11 +195,24 @@ public class ClassService {
 
     @Transactional
     public void deleteClass(Long classId) {
-        if (!classRepository.existsById(classId)) {
-            throw new RuntimeException("Class not found with ID: " + classId);
+        Classes classToDelete = classRepository.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found with ID: " + classId));
+
+        Set<Users> studentsToCheck = new HashSet<>(classToDelete.getStudents());
+
+        // Remove the association between the class and its students
+        for (Users student : studentsToCheck) {
+            classToDelete.removeStudent(student); // Remove the class-student association
+            if (student.getStudentClasses().isEmpty()) {  // If student is not enrolled in any other class
+                userRepository.delete(student);  // Delete the student from the Users table
+            }
         }
-        classRepository.deleteById(classId);
+
+        // Finally, delete the class
+        classRepository.delete(classToDelete);
     }
+
+
 
     @Transactional
     public LecturerClassCourseDTO getCourseDetailsForLecturer(Long lecturerId) {

@@ -2,7 +2,6 @@ package org.backend.examprep_backend.service;
 
 import org.backend.examprep_backend.InvalidRoleException;
 import org.backend.examprep_backend.ResourceNotFoundException;
-import org.backend.examprep_backend.dto.LecturerDTO;
 import org.backend.examprep_backend.dto.StudentClassCourseDTO;
 import org.backend.examprep_backend.dto.StudentClassDTO;
 import org.backend.examprep_backend.dto.StudentCourseDTO;
@@ -29,9 +28,13 @@ public class StudentService {
 
     @Transactional
     public StudentClassCourseDTO getCourseDetailsForStudent(Long studentId) {
-        // Fetch the student with classes, courses, and lecturers
-        Users student = userRepository.findStudentWithClassesCoursesAndLecturers(studentId)
+        // Validate if the user exists and has a 'Student' role
+        Users student = userRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        if (!student.getRole().getName().equalsIgnoreCase("Student")) {
+            throw new InvalidRoleException("User is not a Student");
+        }
 
         // Prepare the student information
         StudentClassCourseDTO studentDTO = new StudentClassCourseDTO();
@@ -41,8 +44,11 @@ public class StudentService {
         studentDTO.setProfileImage(student.getProfileImage());
         studentDTO.setContactNumber(student.getContactNumber());
 
-        // Group classes by course
-        Map<Course, List<Classes>> coursesWithClasses = student.getStudentClasses().stream()
+        // Fetch all classes the student is enrolled in
+        Set<Classes> studentClasses = student.getStudentClasses();
+
+        // Group classes by course to avoid redundant course information
+        Map<Course, List<Classes>> coursesWithClasses = studentClasses.stream()
                 .collect(Collectors.groupingBy(Classes::getCourse));
 
         // Build the list of courses with their classes
@@ -58,7 +64,7 @@ public class StudentService {
                     courseDTO.setCourseDescription(course.getCourseDescription());
                     courseDTO.setImage(course.getImage());
 
-                    // Map each class and include lecturer details
+                    // Map each class under this course to StudentClassDTO
                     List<StudentClassDTO> classDTOs = classes.stream()
                             .map(classEntity -> {
                                 StudentClassDTO classDTO = new StudentClassDTO();
@@ -67,16 +73,6 @@ public class StudentService {
                                 classDTO.setClassDescription(classEntity.getClassDescription());
                                 classDTO.setStartDate(classEntity.getStartDate());
                                 classDTO.setEndDate(classEntity.getEndDate());
-
-                                // Map lecturer details for the class
-                                LecturerDTO lecturerDTO = new LecturerDTO();
-                                Users lecturer = classEntity.getLecturer();
-                                lecturerDTO.setLecturerId(lecturer.getId());
-                                lecturerDTO.setLecturerName(lecturer.getFullNames());
-                                lecturerDTO.setLecturerEmail(lecturer.getEmail());
-                                lecturerDTO.setContactNumber(lecturer.getContactNumber());
-
-                                classDTO.setLecturer(lecturerDTO);  // Set lecturer in class DTO
                                 return classDTO;
                             })
                             .collect(Collectors.toList());
@@ -89,5 +85,4 @@ public class StudentService {
         studentDTO.setCourses(courseDTOs);
         return studentDTO;
     }
-
 }
