@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Ignore File uploads ###
+/src/main/resources/static/uploads/pdf/
