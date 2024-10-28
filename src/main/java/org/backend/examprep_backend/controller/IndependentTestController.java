@@ -35,21 +35,23 @@ public class IndependentTestController {
     }
 
     // Endpoint to get a test by ID (returning DTO)
-    @GetMapping("/{testId}")
-    public ResponseEntity<IndependentTestDTO> getTestById(@PathVariable Long testId) {
-        return testService.getTestById(testId)
-                .map(testDTO -> new ResponseEntity<>(testDTO, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+//    @GetMapping("/{testId}")
+//    public ResponseEntity<IndependentTestDTO> getTestById(@PathVariable Long testId) {
+//        return testService.getTestById(testId)
+//                .map(testDTO -> new ResponseEntity<>(testDTO, HttpStatus.OK))
+//                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+//    }
 
     // Endpoint to get all tests
-    @GetMapping("/GetAllTests")
-    public List<IndependentTestDTO> getAllTests() {
-        return testService.getAllTests();
-    }
+//    @GetMapping("/GetAllTests")
+//    public List<IndependentTestDTO> getAllTests() {
+//        return testService.getAllTests();
+//    }
+
 
 
     //fetch course by independent student id
+
     @GetMapping("/{studentId}/courses")
     @Transactional
     public ResponseEntity<List<CourseDTO>> getCoursesByUserId(
