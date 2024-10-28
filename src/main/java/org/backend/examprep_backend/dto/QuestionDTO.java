@@ -1,25 +1,19 @@
 package org.backend.examprep_backend.dto;
-import lombok.Getter;
-import lombok.Setter;
+
+import lombok.Data;
+import org.backend.examprep_backend.model.QuestionType;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
+@Data
 public class QuestionDTO {
-
-    @Getter @Setter
     private String questionText;
-
-    @Getter @Setter
-    private Long courseId;
-
-    @Getter @Setter
-    private Long domainId;
-
-    @Getter @Setter
     private Long topicId;
-
-    @Getter @Setter
-    private String answerDescription;
-
-    @Getter @Setter
+    private QuestionType questionType;
     private List<AnswerDTO> answers;
+    private String instruction;
+    private MultipartFile pdfFile;  // PDF for scenario-based or image-heavy questions
+    private String pdfFileUrl;
 }
+

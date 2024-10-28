@@ -1,6 +1,9 @@
 package org.backend.examprep_backend.dto;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,8 +11,9 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
 public class UserDto {
+
+    private  Long id;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
@@ -26,12 +30,13 @@ public class UserDto {
     private String surname;
 
     @NotBlank(message = "Contact number is required")
+
     private String contactNumber;
 
     @NotBlank(message = "Role is required")
     private String role;
- 
-    // Field for handling profile image
+
+    @Column(nullable = true)
     private byte[] profileImage;
 
     private List<Long> courseIds;

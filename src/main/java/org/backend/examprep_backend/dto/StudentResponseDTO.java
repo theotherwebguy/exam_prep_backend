@@ -1,0 +1,15 @@
+package org.backend.examprep_backend.dto;
+
+import lombok.Data;
+
+@Data
+public class StudentResponseDTO {
+    private Long studentId;
+    private String fullName;
+    private String surname;
+    private String email;
+    private String contactNumber;
+    private byte[] profileImage;
+    // Getters and Setters
+}
+

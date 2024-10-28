@@ -15,10 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,17 +29,16 @@ public class UserService {
 
     // Register a new user using UserDto
     @Transactional
-    public Users registerUser(UserDto userDto) {
+    public Users registerUser(UserDto userDto,  byte[] profileImage) {
         // Create a new Users entity from UserDto
-        Users user = Users.builder()
-                .email(userDto.getEmail())
-                .password(userDto.getPassword())
-                .title(userDto.getTitle())
-                .fullNames(userDto.getFullNames())
-                .surname(userDto.getSurname())
-                .contactNumber(userDto.getContactNumber())
-                .profileImage(userDto.getProfileImage())
-                .build();
+        Users user = new Users();
+        user.setEmail(userDto.getEmail());
+        user.setPassword(userDto.getPassword());
+        user.setTitle(userDto.getTitle());
+        user.setFullNames(userDto.getFullNames());
+        user.setSurname(userDto.getSurname());
+        user.setContactNumber(userDto.getContactNumber());
+        user.setProfileImage(profileImage);
 
         // Hash the user's password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -70,32 +67,104 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    // Gt all users
     @Transactional(readOnly = true)
-    public List<Users> getAllUsers() {
-        return userRepository.findAll();
-    }
-
-    //Update a user
-    @Transactional
-    public void updateUser(Long userId, UserDto userDto) {
+    public UserDto findUserById(Long userId) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        user.setEmail(userDto.getEmail());
-        user.setFullNames(userDto.getFullNames());
-        user.setSurname(userDto.getSurname());
-        user.setContactNumber(userDto.getContactNumber());
-        user.setTitle(userDto.getTitle());
+        // Map Users to UserDto
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setEmail(user.getEmail());
+        userDto.setTitle(user.getTitle());
+        userDto.setFullNames(user.getFullNames());
+        userDto.setSurname(user.getSurname());
+        userDto.setContactNumber(user.getContactNumber());
 
+        if (user.getRole() != null) {
+            userDto.setRole(user.getRole().getName());
+        }
+
+        // Set profile image only if it exists
+        if (user.getProfileImage() != null) {
+            userDto.setProfileImage(user.getProfileImage());
+        }
+
+        return userDto;
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<UserDto> findAllUsers() {
+    return userRepository.findAll().stream()
+            .map(this::mapToUserDto)
+            .collect(Collectors.toList());
+}
+    private UserDto mapToUserDto(Users user) {
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setEmail(user.getEmail());
+        userDto.setPassword(user.getPassword());
+        userDto.setTitle(user.getTitle());
+        userDto.setFullNames(user.getFullNames());
+        userDto.setSurname(user.getSurname());
+        userDto.setContactNumber(user.getContactNumber());
+        userDto.setRole(user.getRole().getName());
+
+        // Return the image as byte[] without converting to Base64
+        userDto.setProfileImage(user.getProfileImage());
+
+        if (user.getCourses() != null) {
+            List<Long> courseIds = user.getCourses().stream()
+                    .map(Course::getCourseId)
+                    .collect(Collectors.toList());
+            userDto.setCourseIds(courseIds);
+        }
+
+        return userDto;
+    }
+
+    @Transactional
+    public void updateUser(Long userId, UserDto userDto) {
+        // Retrieve the current user data
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Set new values while retaining existing ones
+        if (userDto.getEmail() != null) {
+            user.setEmail(userDto.getEmail());
+        }
+        if (userDto.getFullNames() != null) {
+            user.setFullNames(userDto.getFullNames());
+        }
+        if (userDto.getSurname() != null) {
+            user.setSurname(userDto.getSurname());
+        }
+        if (userDto.getContactNumber() != null) {
+            user.setContactNumber(userDto.getContactNumber());
+        }
+        if (userDto.getTitle() != null) {
+            user.setTitle(userDto.getTitle());
+        }
+
+        // Update password only if provided
         if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
 
-        Role role = roleRepository.findByName(userDto.getRole())
-                .orElseThrow(() -> new IllegalArgumentException("Role not found"));
-        user.setRole(role);
+        // Update role only if different
+        if (!user.getRole().getName().equals(userDto.getRole())) {
+            Role role = roleRepository.findByName(userDto.getRole())
+                    .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+            user.setRole(role);
+        }
 
+        // Update profile image only if provided
+        if (userDto.getProfileImage() != null && userDto.getProfileImage().length > 0) {
+            user.setProfileImage(userDto.getProfileImage());
+        }
+
+        // Save the updated user
         userRepository.save(user);
     }
 
@@ -107,21 +176,21 @@ public class UserService {
         userRepository.delete(user);
     }
 
-
     // Find a user by email or contact number
     @Transactional(readOnly = true)
     public Optional<Users> findUserByEmailOrContactNumber(String email, String contactNumber) {
         return userRepository.findByEmailOrContactNumber(email, contactNumber);
     }
 
-    // Authenticate a user
-    public boolean authenticateUser(String email, String password) {
+    @Transactional(readOnly = true)
+    public UserDto authenticateUser(String email, String password) {
         Optional<Users> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
             Users user = userOptional.get();
             if (passwordEncoder.matches(password, user.getPassword())) {
-                return true; // Password matches
+                // Map Users to UserDto excluding the password
+                return mapUserToDto(user);
             } else {
                 throw new IllegalArgumentException("Invalid email or password.");
             }
@@ -129,6 +198,22 @@ public class UserService {
             throw new IllegalArgumentException("User not found with the provided email.");
         }
     }
+
+    // Helper method to map Users entity to UserDto
+    private UserDto mapUserToDto(Users user) {
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setEmail(user.getEmail());
+        userDto.setTitle(user.getTitle());
+        userDto.setFullNames(user.getFullNames());
+        userDto.setSurname(user.getSurname());
+        userDto.setContactNumber(user.getContactNumber());
+        userDto.setRole(user.getRole().getName()); // Get role name, not ID
+        userDto.setProfileImage(user.getProfileImage());
+        userDto.setCourseIds(user.getCourses().stream().map(Course::getCourseId).collect(Collectors.toList()));
+        return userDto;
+    }
+
 
     // Assign courses to a user
     @Transactional
@@ -151,19 +236,32 @@ public class UserService {
         userRepository.save(user); // Save the updated user
     }
 
-    public void saveAllUsers(List<Users> users) {
-        userRepository.saveAll(users); // Save all parsed students
-    }
-    public void saveUser(Users user) {
-        userRepository.save(user);
+    // Method to search for lecturers by name using binary search
+    @Transactional
+    public Optional<Users> binarySearchLecturerByName(String surname) {
+        List<Users> lecturers = userRepository.findAllByRoleName("LECTURER"); // Fetch all lecturers
+        // Ensure the list is sorted by name for binary search to work
+        lecturers.sort(Comparator.comparing(Users::getSurname));
+        int left = 0;
+        int right = lecturers.size() - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            Users midUser = lecturers.get(mid);
+            if (midUser.getSurname().equalsIgnoreCase(surname)) {
+                return Optional.of(midUser);
+            } else if (midUser.getSurname().compareToIgnoreCase(surname) < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        return Optional.empty(); // Lecturer not found
     }
 
-    public void saveAll(List<Users> users) {
-        userRepository.saveAll(users);
-    }
-
-    public Role findRoleById(Long roleId) {
-        return roleRepository.findById(roleId)
-                .orElseThrow(() -> new RuntimeException("Role not found with ID: " + roleId));
+    // Method to get all lecturers
+    @Transactional(readOnly = true)
+    public List<Users> getAllLecturers() {
+        return userRepository.findAllByRoleName("LECTURER");
     }
 }

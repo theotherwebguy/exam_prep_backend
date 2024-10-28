@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.backend.examprep_backend.ResourceNotFoundException;
-import org.backend.examprep_backend.dto.ClassDTO;
+import org.backend.examprep_backend.dto.*;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Role;
@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/classes")
@@ -72,54 +73,92 @@ public class ClassController {
 //        return ResponseEntity.ok(classes);
 //    }
 
-    @GetMapping("/{classId}")
-    public ResponseEntity<Classes> getClassById(@PathVariable Long classId) {
-        Classes classEntity = classService.getClassById(classId);
-        return ResponseEntity.ok(classEntity);
+//    @GetMapping("/{classId}")
+//    public ResponseEntity<Classes> getClassById(@PathVariable Long classId) {
+//        Classes classEntity = classService.getClassById(classId);
+//        return ResponseEntity.ok(classEntity);
+//    }
+
+//    @PutMapping("/{classId}")
+//    public ResponseEntity<ClassDTO> updateClass(@PathVariable Long classId, @RequestBody ClassDTO classDTO) {
+//        try {
+//            // Call the service method to update the class
+//            Classes updatedClass = classService.updateClass(classId, classDTO);
+//
+//            // Map the updated class to ClassDTO (this can also be done in the service layer)
+//            ClassDTO responseDTO = new ClassDTO();
+//            responseDTO.setClassesId(updatedClass.getClassesId());
+//            responseDTO.setClassName(updatedClass.getClassName());
+//            responseDTO.setClassDescription(updatedClass.getClassDescription());
+//            responseDTO.setStartDate(updatedClass.getStartDate());
+//            responseDTO.setEndDate(updatedClass.getEndDate());
+//
+//            if (updatedClass.getLecturer() != null) {
+//                responseDTO.setUserId(updatedClass.getLecturer().getId());
+//                responseDTO.setLecturerName(updatedClass.getLecturer().getFullNames());
+//            }
+//
+//            if (updatedClass.getCourse() != null) {
+//                responseDTO.setCourseName(updatedClass.getCourse().getCourseName()); // Set course name
+//            }
+//            // Add students to the response using UserDto
+//
+//            return ResponseEntity.ok(responseDTO);
+//        } catch (ResourceNotFoundException e) {
+//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
+//
+//    @DeleteMapping("/{classId}")
+//    public ResponseEntity<Void> deleteClass(@PathVariable Long classId) {
+//        try {
+//            classService.deleteClass(classId);
+//            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+//        } catch (ResourceNotFoundException e) {
+//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
+
+    @GetMapping("/with-students")
+    public ResponseEntity<List<ClassResponseDTO>> getAllClassesWithStudents() {
+        List<ClassResponseDTO> classes = classService.getAllClassesWithStudents();
+        return ResponseEntity.ok(classes);
     }
 
-    @PutMapping("/{classId}")
-    public ResponseEntity<ClassDTO> updateClass(@PathVariable Long classId, @RequestBody ClassDTO classDTO) {
-        try {
-            // Call the service method to update the class
-            Classes updatedClass = classService.updateClass(classId, classDTO);
-
-            // Map the updated class to ClassDTO (this can also be done in the service layer)
-            ClassDTO responseDTO = new ClassDTO();
-            responseDTO.setClassesId(updatedClass.getClassesId());
-            responseDTO.setClassName(updatedClass.getClassName());
-            responseDTO.setClassDescription(updatedClass.getClassDescription());
-            responseDTO.setStartDate(updatedClass.getStartDate());
-            responseDTO.setEndDate(updatedClass.getEndDate());
-
-            if (updatedClass.getLecturer() != null) {
-                responseDTO.setUserId(updatedClass.getLecturer().getId());
-                responseDTO.setLecturerName(updatedClass.getLecturer().getFullNames());
-            }
-
-            if (updatedClass.getCourse() != null) {
-                responseDTO.setCourseName(updatedClass.getCourse().getCourseName()); // Set course name
-            }
-
-            return ResponseEntity.ok(responseDTO);
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @GetMapping("/with-students/{classId}")
+    public ResponseEntity<ClassResponseDTO> getClassWithStudentsById(@PathVariable Long classId) {
+        ClassResponseDTO classResponse = classService.getClassWithStudentsById(classId);
+        return ResponseEntity.ok(classResponse);
     }
 
-    @DeleteMapping("/{classId}")
-    public ResponseEntity<Void> deleteClass(@PathVariable Long classId) {
-        try {
-            classService.deleteClass(classId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @PutMapping("/with-students/{classId}")
+    public ResponseEntity<ClassResponseDTO> updateClass(
+            @PathVariable Long classId,
+            @RequestBody org.backend.examprep_backend.dto.ClassRequestDTO classRequestDTO) {
+
+        ClassResponseDTO updatedClass = classService.updateClass(classId, classRequestDTO);
+        return ResponseEntity.ok(updatedClass);
     }
+
+
+
+    @DeleteMapping("/with-students/{classId}")
+    public ResponseEntity<String> deleteClass(@PathVariable Long classId) {
+        classService.deleteClass(classId);
+        return ResponseEntity.ok("Class and associated student enrollments deleted successfully.");
+    }
+
+
+    @GetMapping("/{lecturerId}/details")
+    public ResponseEntity<LecturerClassCourseDTO> getCourseDetailsForLecturer(@PathVariable Long lecturerId) {
+        LecturerClassCourseDTO lecturerDetails = classService.getCourseDetailsForLecturer(lecturerId);
+        return ResponseEntity.ok(lecturerDetails);
+    }
+
 
 
 }

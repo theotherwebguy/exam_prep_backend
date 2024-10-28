@@ -5,7 +5,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.backend.examprep_backend.InvalidRoleException;
 import org.backend.examprep_backend.ResourceNotFoundException;
-import org.backend.examprep_backend.dto.ClassDTO;
+import org.backend.examprep_backend.dto.*;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Users;
 import org.backend.examprep_backend.model.Course;
@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ClassService {
@@ -41,8 +41,9 @@ public class ClassService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Transactional
     public Classes addClassAndStudents(Long courseId, ClassDTO classDTO, MultipartFile file) throws Exception {
-        // Step 1: Create the class
+        // Step 1: Fetch course by ID
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
 
@@ -55,7 +56,7 @@ public class ClassService {
             throw new InvalidRoleException("User is not a Lecturer");
         }
 
-        // Create and populate the class entity
+        // Step 3: Create the class entity
         Classes newClass = new Classes();
         newClass.setClassName(classDTO.getClassName());
         newClass.setClassDescription(classDTO.getClassDescription());
@@ -64,10 +65,9 @@ public class ClassService {
         newClass.setCourse(course);
         newClass.setLecturer(lecturer);
 
-        // Save the class to the database
-        Classes createdClass = classRepository.save(newClass);
+        Classes createdClass = classRepository.save(newClass); // Save class
 
-        // Step 2: Parse the uploaded Excel file for students and associate them with the class
+        // Step 4: Parse students from Excel and associate with class
         if (file != null && !file.isEmpty()) {
             Optional<Role> studentRoleOpt = roleRepository.findByName("STUDENT");  // Assuming role ID for student is 1
             if (studentRoleOpt.isEmpty()) {
@@ -76,84 +76,219 @@ public class ClassService {
 
             // Extract students from the Excel file and link them to the created class
             Role studentRole = studentRoleOpt.get();
-            List<Users> students = studentExcelParserService.extractStudentsFromExcel(file, studentRole, createdClass.getClassesId());
-
-            // Save the students in the database
-            userRepository.saveAll(students);
+            try {
+                // Extract students from Excel and link to the class
+                List<Users> students = studentExcelParserService.extractStudentsFromExcel(file, studentRole, createdClass.getClassesId());
+                userRepository.saveAll(students);
+            } catch (Exception e) {
+                // Handle parsing exceptions by throwing a specific error
+                throw new Exception("Failed to parse students from Excel: " + e.getMessage(), e);
+            }
         }
 
         // Return the newly created class
         return createdClass;
     }
+@Transactional
+    public List<ClassResponseDTO> getAllClassesWithStudents() {
+        List<Classes> classEntities = classRepository.findAll();
 
-    public List<Classes> getAllClasses() {
-        return classRepository.findAll();
-    }
-
-    public List<Classes> getClassesByCourseId(Long courseId) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
-        return classRepository.findByCourse(course);
-    }
-
-    public Classes getClassById(Long classId) {
-        return classRepository.findById(classId)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
+        // Map classes to DTOs
+        return classEntities.stream()
+                .map(this::mapToClassResponseDTO)
+                .toList();
     }
     @Transactional
-    public Classes updateClass(Long classId, ClassDTO classDTO) {
-        // Find the class by ID
+    public ClassResponseDTO getClassWithStudentsById(Long classId) {
+        Classes classEntity = classRepository.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found with ID: " + classId));
+        return mapToClassResponseDTO(classEntity);
+    }
+
+    private ClassResponseDTO mapToClassResponseDTO(Classes classes) {
+        ClassResponseDTO dto = new ClassResponseDTO();
+        dto.setClassId(classes.getClassesId());
+        dto.setClassName(classes.getClassName());
+        dto.setStartDate(classes.getStartDate());
+        dto.setEndDate(classes.getEndDate());
+        dto.setClassDescription(classes.getClassDescription());
+
+        // Map students to StudentResponseDTO
+        List<StudentResponseDTO> studentDTOs = classes.getStudents().stream()
+                .map(this::mapToStudentResponseDTO)
+                .toList();
+        dto.setStudents(studentDTOs);
+
+
+      // Map the course information
+        if (classes.getCourse() != null) {
+            CourseResponseDTO courseDTO = new CourseResponseDTO();
+            courseDTO.setCourseId(classes.getCourse().getCourseId());
+            courseDTO.setImage(classes.getCourse().getImage());
+            courseDTO.setCourseName(classes.getCourse().getCourseName());
+            courseDTO.setCourseDescription(classes.getCourse().getCourseDescription());
+            dto.setCourse(courseDTO);
+        }
+
+        // Map the lecturer information
+        if (classes.getLecturer() != null) {
+            LecturerResponseDTO lecturerDTO = new LecturerResponseDTO();
+            lecturerDTO.setLecturerId(classes.getLecturer().getId());
+            lecturerDTO.setFullName(classes.getLecturer().getFullNames());
+            lecturerDTO.setEmail(classes.getLecturer().getEmail());
+            lecturerDTO.setContactNumber(classes.getLecturer().getContactNumber());
+            dto.setLecturer(lecturerDTO);
+        }
+
+        return dto;
+    }
+    private StudentResponseDTO mapToStudentResponseDTO(Users student) {
+        StudentResponseDTO dto = new StudentResponseDTO();
+        dto.setStudentId(student.getId());
+        dto.setFullName(student.getFullNames());
+        dto.setEmail(student.getEmail());
+        dto.setContactNumber(student.getContactNumber());
+        dto.setSurname(student.getSurname());
+        dto.setProfileImage(student.getProfileImage());
+        return dto;
+    }
+
+    @Transactional
+    public ClassResponseDTO updateClass(Long classId, ClassRequestDTO classRequestDTO) {
+        // Find the class by ID or throw an exception
         Classes existingClass = classRepository.findById(classId)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
+                .orElseThrow(() -> new RuntimeException("Class not found with ID: " + classId));
 
-        // Update the class details
-        existingClass.setClassName(classDTO.getClassName());
-        existingClass.setClassDescription(classDTO.getClassDescription());
-        existingClass.setStartDate(classDTO.getStartDate());
-        existingClass.setEndDate(classDTO.getEndDate());
+        // Update the class fields
+        existingClass.setClassName(classRequestDTO.getClassName());
+        existingClass.setClassDescription(classRequestDTO.getClassDescription());
 
-        // If the lecturer is being updated, fetch the lecturer and validate their role
-        if (classDTO.getUserId() != null) {
-            Users lecturer = userRepository.findById(classDTO.getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + classDTO.getUserId()));
+        // If the course ID is provided, link the course to the class
+        if (classRequestDTO.getCourseId() != null) {
+            Course course = courseRepository.findById(classRequestDTO.getCourseId())
+                    .orElseThrow(() -> new RuntimeException("Course not found with ID: " + classRequestDTO.getCourseId()));
+            existingClass.setCourse(course);
+        }
+        // Update the lecturer if provided
+        if (classRequestDTO.getLecturerId() != null) {
+            Users lecturer = userRepository.findById(classRequestDTO.getLecturerId())
+                    .orElseThrow(() -> new RuntimeException("Lecturer not found with ID: " + classRequestDTO.getLecturerId()));
 
+            // Ensure that the user is a lecturer
             if (!lecturer.getRole().getName().equalsIgnoreCase("Lecturer")) {
-                throw new InvalidRoleException("User is not a Lecturer");
+                throw new RuntimeException("User is not a Lecturer");
             }
-
             existingClass.setLecturer(lecturer);
         }
 
+        // Update start and end dates if provided
+        if (classRequestDTO.getStartDate() != null) {
+            existingClass.setStartDate(classRequestDTO.getStartDate());
+        }
+        if (classRequestDTO.getEndDate() != null) {
+            existingClass.setEndDate(classRequestDTO.getEndDate());
+        }
         // Save the updated class
-        Classes savedClass = classRepository.save(existingClass);
-
-        // Populate the DTO with the updated data, including the course name
-        ClassDTO updatedClassDTO = new ClassDTO();
-        updatedClassDTO.setClassesId(savedClass.getClassesId());
-        updatedClassDTO.setClassName(savedClass.getClassName());
-        updatedClassDTO.setClassDescription(savedClass.getClassDescription());
-        updatedClassDTO.setStartDate(savedClass.getStartDate());
-        updatedClassDTO.setEndDate(savedClass.getEndDate());
-
-        if (savedClass.getLecturer() != null) {
-            updatedClassDTO.setUserId(savedClass.getLecturer().getId());
-            updatedClassDTO.setLecturerName(savedClass.getLecturer().getFullNames());
-        }
-
-        if (savedClass.getCourse() != null) {
-            updatedClassDTO.setCourseName(savedClass.getCourse().getCourseName()); // Fetch course name
-        }
-
-        return savedClass;
+        Classes updatedClass = classRepository.save(existingClass);
+        return mapToClassResponseDTO(updatedClass);
     }
-    public void deleteClass(Long classId) {
-        // Check if the class exists before deleting
-        Classes classToDelete = classRepository.findById(classId)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
 
-        // Delete the class
+    @Transactional
+    public void deleteClass(Long classId) {
+        Classes classToDelete = classRepository.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found with ID: " + classId));
+
+        Set<Users> studentsToCheck = new HashSet<>(classToDelete.getStudents());
+
+        // Remove the association between the class and its students
+        for (Users student : studentsToCheck) {
+            classToDelete.removeStudent(student); // Remove the class-student association
+            if (student.getStudentClasses().isEmpty()) {  // If student is not enrolled in any other class
+                userRepository.delete(student);  // Delete the student from the Users table
+            }
+        }
+
+        // Finally, delete the class
         classRepository.delete(classToDelete);
     }
+
+
+
+    @Transactional
+    public LecturerClassCourseDTO getCourseDetailsForLecturer(Long lecturerId) {
+        // Validate that the lecturer exists and is assigned the correct role
+        Users lecturer = userRepository.findById(lecturerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lecturer not found with id: " + lecturerId));
+
+        if (!lecturer.getRole().getName().equalsIgnoreCase("Lecturer")) {
+            throw new InvalidRoleException("User is not a Lecturer");
+        }
+
+        // Prepare the lecturer information
+        LecturerClassCourseDTO lecturerDTO = new LecturerClassCourseDTO();
+        lecturerDTO.setLecturerId(lecturer.getId());
+        lecturerDTO.setLecturerName(lecturer.getFullNames());
+        lecturerDTO.setLecturerEmail(lecturer.getEmail());
+        lecturerDTO.setLecturerContactNumber(lecturer.getContactNumber());
+
+        // Fetch all classes taught by the lecturer
+        List<Classes> classesForLecturer = classRepository.findByLecturerId(lecturerId);
+
+        // Group classes by course to avoid redundant course information
+        Map<Course, List<Classes>> coursesWithClasses = classesForLecturer.stream()
+                .collect(Collectors.groupingBy(Classes::getCourse));
+
+        // Build the list of courses with their classes
+        List<LecturerCourseDTO> courseDTOs = coursesWithClasses.entrySet().stream()
+                .map(entry -> {
+                    Course course = entry.getKey();
+                    List<Classes> classes = entry.getValue();
+
+                    // Create a LecturerCourseDTO for each course
+                    LecturerCourseDTO courseDTO = new LecturerCourseDTO();
+                    courseDTO.setCourseId(course.getCourseId());
+                    courseDTO.setCourseName(course.getCourseName());
+                    courseDTO.setCourseDescription(course.getCourseDescription());
+                    courseDTO.setImage(course.getImage());
+
+                    // Map each class under this course to ClassWithStudentsDTO with student data
+                    List<ClassWithStudentsDTO> classDTOs = classes.stream()
+                            .map(classEntity -> {
+                                ClassWithStudentsDTO classDTO = new ClassWithStudentsDTO();
+                                classDTO.setClassId(classEntity.getClassesId());
+                                classDTO.setClassName(classEntity.getClassName());
+                                classDTO.setClassDescription(classEntity.getClassDescription());
+                                classDTO.setStartDate(classEntity.getStartDate());
+                                classDTO.setEndDate(classEntity.getEndDate());
+
+                                // Map students under each class
+                                List<StudentResponseDTO> studentDTOs = classEntity.getStudents().stream()
+                                        .map(student -> {
+                                            StudentResponseDTO studentDTO = new StudentResponseDTO();
+                                            studentDTO.setStudentId(student.getId());
+                                            studentDTO.setFullName(student.getFullNames());
+                                            studentDTO.setSurname(student.getSurname());
+                                            studentDTO.setEmail(student.getEmail());
+                                            studentDTO.setProfileImage(student.getProfileImage());
+                                            studentDTO.setContactNumber(student.getContactNumber());
+                                            return studentDTO;
+                                        })
+                                        .collect(Collectors.toList());
+                                classDTO.setStudents(studentDTOs);
+
+                                return classDTO;
+                            })
+                            .collect(Collectors.toList());
+
+                    courseDTO.setClasses(classDTOs);
+                    return courseDTO;
+                })
+                .collect(Collectors.toList());
+
+        lecturerDTO.setCourses(courseDTOs);
+        return lecturerDTO;
+    }
+
 
 
 }

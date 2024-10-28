@@ -6,7 +6,9 @@ import org.apache.catalina.User;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -16,7 +18,7 @@ public class Classes {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long classesId;
 
-    @Column(length = 255)
+    @Column(length = 255, unique = true)
     private String className;
 
     @Column(length = 255)
@@ -25,15 +27,22 @@ public class Classes {
     private LocalDate endDate;
 
 
-    @ManyToOne
-    @JoinColumn(name = "courseId", nullable = false)
-    private Course course;
+    @ManyToOne(fetch = FetchType.EAGER) // Adjust fetch type if needed
+    @JoinColumn(name = "course_id", nullable = false) // Foreign key
+    private Course course; // Add this field
 
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
     private Users lecturer;
 
-    @OneToMany(mappedBy = "studentClass", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Users> students = new ArrayList<>();
+    @Column(nullable = false)
+    @ManyToMany(mappedBy = "studentClasses")
+    private Set<Users> students = new HashSet<>();
 
+
+    // Utility method to remove a student
+    public void removeStudent(Users student) {
+        this.students.remove(student);
+        student.getStudentClasses().remove(this);
+    }
 }

@@ -7,14 +7,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+
 @Getter
 @Setter
 public class Users {
@@ -24,7 +22,7 @@ public class Users {
 
     @Email(message = "Email should be valid")
     @NotBlank(message = "Email is mandatory")
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false,unique = true)
     private String email;
 
     @NotBlank(message = "Password is mandatory")
@@ -45,15 +43,14 @@ public class Users {
 
     @NotBlank(message = "Contact number is mandatory")
     @Pattern(regexp = "\\+?\\d{10,15}", message = "Contact number should be valid")
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false,unique = true)
     private String contactNumber;
 
-    // Field for storing user profile image as byte[]
-    @Lob // Specifies that this is a large object (for storing binary data)
-    @Column(name = "profile_image")
+    @Lob
+    @Basic(fetch=FetchType.LAZY)
+    @Column(name = "profile_image", nullable = true)
     private byte[] profileImage;
 
-    // Use ManyToOne for a single Role
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     @NotNull(message = "User must have a role")
@@ -67,7 +64,17 @@ public class Users {
     )
     private Set<Course> courses;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "class_id")  // Link the student to the class
-    private Classes studentClass;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "student_class",
+            joinColumns = @JoinColumn(name = "student_id"),
+            inverseJoinColumns = @JoinColumn(name = "class_id")
+    )
+    private Set<Classes> studentClasses = new HashSet<>();
+
+    public void removeClass(Classes classToRemove) {
+        this.studentClasses.remove(classToRemove);
+    }
+
 }
