@@ -65,11 +65,16 @@ public class Users {
     private Set<Course> courses;
 
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "student_class",
             joinColumns = @JoinColumn(name = "student_id"),
             inverseJoinColumns = @JoinColumn(name = "class_id")
     )
     private Set<Classes> studentClasses = new HashSet<>();
+
+    public void removeClass(Classes classToRemove) {
+        this.studentClasses.remove(classToRemove);
+    }
+
 }
