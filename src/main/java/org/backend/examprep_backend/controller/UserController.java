@@ -1,6 +1,7 @@
 package org.backend.examprep_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.backend.examprep_backend.dto.UserDto;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Role;
@@ -111,20 +112,19 @@ public class UserController {
     }
 
 
-    // Get user by ID
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserById(@PathVariable Long userId) {
         try {
-            Users user = userService.findUserById(userId); // Call the service method
-            return ResponseEntity.ok(user);
+            UserDto userDto = userService.findUserById(userId); // Call the service method
+            return ResponseEntity.ok(userDto);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred. Please try again. Error: " + e.getMessage());
         }
-
     }
+
 
     // Update user with optional image update
     @PutMapping(value = "/update/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -149,8 +149,9 @@ public class ClassController {
     @DeleteMapping("/with-students/{classId}")
     public ResponseEntity<String> deleteClass(@PathVariable Long classId) {
         classService.deleteClass(classId);
-        return ResponseEntity.ok("Class deleted successfully.");
+        return ResponseEntity.ok("Class and associated student enrollments deleted successfully.");
     }
+
 
     @GetMapping("/{lecturerId}/details")
     public ResponseEntity<LecturerClassCourseDTO> getCourseDetailsForLecturer(@PathVariable Long lecturerId) {
