@@ -1,5 +1,6 @@
 package org.backend.examprep_backend.service;
 
+import org.backend.examprep_backend.dto.AnswerDTO;
 import org.backend.examprep_backend.dto.QuestionDTO;
 import org.backend.examprep_backend.model.Answer;
 import org.backend.examprep_backend.model.Question;
@@ -51,7 +52,7 @@ public class QuestionService {
                     Answer answer = new Answer();
                     answer.setAnswerText(answerDTO.getAnswerText());
                     answer.setAnswerDescription(answerDTO.getAnswerDescription());
-                    answer.setIsCorrect(answerDTO.getIsCorrect());
+                    answer.setCorrect(answerDTO.isCorrect());
                     answer.setQuestion(question);
                     return answer;
                 }).collect(Collectors.toList());
@@ -77,6 +78,33 @@ public class QuestionService {
         if (!file.getContentType().equals("application/pdf")) {
             throw new IllegalArgumentException("Uploaded file must be a PDF.");
         }
+    }
+
+//    @Transactional
+//    public List<QuestionDTO> getQuestionsByTopicId(Long topicId) {
+//        List<Question> questions = questionRepository.findByTopic_TopicId(topicId);
+//        return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
+//    }
+//
+//    private QuestionDTO convertToDTO(Question question) {
+//        QuestionDTO dto = new QuestionDTO();
+//        dto.setQuestionText(question.getQuestionText());
+//        dto.setTopicId(question.getTopic().getTopicId());
+//        dto.setQuestionType(question.getQuestionType());
+//        dto.setInstruction(question.getInstruction());
+//
+//
+//
+//        dto.setPdfFile(null); // Handle PDF as needed
+//        dto.setAnswers(question.getAnswers().stream()
+//                .map(answer -> new AnswerDTO(answer.getAnswerText(), answer.isCorrect(), answer.getAnswerDescription()))
+//                .collect(Collectors.toList()));
+//        return dto;
+//    }
+
+    @Transactional
+    public List<Question> getQuestionsByTopicId(Long topicId) {
+        return questionRepository.findByTopic_TopicId(topicId); // Assuming you have a repository method for this
     }
 
 

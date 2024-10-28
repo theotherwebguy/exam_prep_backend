@@ -14,5 +14,6 @@ public class QuestionDTO {
     private List<AnswerDTO> answers;
     private String instruction;
     private MultipartFile pdfFile;  // PDF for scenario-based or image-heavy questions
+    private String pdfFileUrl;
 }
 

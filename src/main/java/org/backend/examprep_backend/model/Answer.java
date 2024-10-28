@@ -16,7 +16,7 @@ public class Answer {
     private String answerText;
 
     @Column(nullable = false)
-    private Boolean isCorrect; // Marks if this is the correct answer
+    private boolean isCorrect; // Marks if this is the correct answer
 
     @Column(columnDefinition = "text")
     private String answerDescription; // Additional explanation for the answer
@@ -24,4 +24,10 @@ public class Answer {
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
+
+    // Make sure you have a getter method for isCorrect
+    public boolean isCorrect() {
+        return isCorrect;
+    }
+
 }
