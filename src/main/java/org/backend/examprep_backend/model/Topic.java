@@ -17,5 +17,6 @@ public class Topic {
     @JoinColumn(name = "domain_id", nullable = false)
     @JsonBackReference
     private Domain domain;
+
     private String topicName;
 }
