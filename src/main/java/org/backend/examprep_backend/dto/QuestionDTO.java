@@ -11,6 +11,9 @@ public class QuestionDTO {
     private Long questionId;
     private String questionText;
     private Long topicId;
+    private String topicName; // The name of the associated topic
+    private Long domainId;
+    private String domainName; // The name of the associated domain
     private QuestionType questionType;
     private List<AnswerDTO> answers;
     private String instruction;
