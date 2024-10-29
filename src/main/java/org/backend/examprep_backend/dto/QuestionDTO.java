@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class QuestionDTO {
+    private Long questionId;
     private String questionText;
     private Long topicId;
     private QuestionType questionType;
