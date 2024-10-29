@@ -81,11 +81,34 @@ public class QuestionController {
         return dto;
     }
 
+
     @Transactional
     @GetMapping("/unmoderated/{courseId}")
     public ResponseEntity<List<QuestionDTO>> getUnmoderatedQuestionsByCourseId(@PathVariable Long courseId) {
         List<QuestionDTO> questionDTOs = questionService.getUnmoderatedQuestionsByCourseId(courseId);
         return ResponseEntity.ok(questionDTOs);
+    }
+
+    @PutMapping("/moderate/update/{questionId}")
+    public ResponseEntity<String> updateQuestionByModerator(
+            @PathVariable Long questionId,
+            @RequestBody QuestionDTO questionDTO) {
+        try {
+            questionService.updateQuestionByModerator(questionId, questionDTO);
+            return ResponseEntity.ok("Question updated successfully, moderation status set to true.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again.");
+        }
+    }
+
+    @GetMapping("/question/{questionId}")
+    public ResponseEntity<QuestionDTO> getQuestionById(@PathVariable Long questionId) {
+        Question question = questionService.getQuestionById(questionId); // Modify the service method to fetch by questionId
+        QuestionDTO questionDTO = convertToDTO(question);
+        return ResponseEntity.ok(questionDTO);
     }
 
 }

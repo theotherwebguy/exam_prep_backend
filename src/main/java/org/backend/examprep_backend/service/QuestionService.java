@@ -137,4 +137,44 @@ public class QuestionService {
         return dto;
     }
 
+    @Transactional
+    public void updateQuestionByModerator(Long questionId, QuestionDTO questionDTO) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new IllegalArgumentException("Question not found with ID: " + questionId));
+
+        // Update fields from DTO, ensuring isModerated is set to true
+        question.setQuestionText(questionDTO.getQuestionText());
+        question.setQuestionType(questionDTO.getQuestionType());
+        question.setInstruction(questionDTO.getInstruction());
+        question.setPdfFileUrl(questionDTO.getPdfFileUrl());
+        question.setModerated(true);  // Always set to true
+
+        // Set Topic
+        Topic topic = topicRepository.findById(questionDTO.getTopicId())
+                .orElseThrow(() -> new IllegalArgumentException("Topic not found with ID: " + questionDTO.getTopicId()));
+        question.setTopic(topic);
+
+        // Update Answers if provided
+        if (questionDTO.getAnswers() != null) {
+            List<Answer> updatedAnswers = questionDTO.getAnswers().stream()
+                    .map(answerDTO -> {
+                        Answer answer = new Answer();
+                        answer.setAnswerText(answerDTO.getAnswerText());
+                        answer.setAnswerDescription(answerDTO.getAnswerDescription());
+                        answer.setCorrect(answerDTO.getIsCorrect());
+                        answer.setQuestion(question);
+                        return answer;
+                    }).collect(Collectors.toList());
+            question.setAnswers(updatedAnswers);
+        }
+
+        // Save updated question
+        questionRepository.save(question);
+    }
+
+    public Question getQuestionById(Long questionId) {
+        return questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
+    }
+
 }
