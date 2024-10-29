@@ -36,6 +36,9 @@ public class IndependentTestService {
         IndependentTest test = new IndependentTest();
         test.setTestName(testDTO.getTestName());
 
+        // Save the test to generate ID
+        test = testRepository.save(test);
+
         List<DomainDTO> domainDTOList = testDTO.getTopicIds().stream()
                 .map(topicId -> {
                     Topic topic = topicRepository.findById(topicId)
@@ -62,6 +65,7 @@ public class IndependentTestService {
                 })
                 .collect(Collectors.toList());
 
+        // Convert to DTO and set domains
         IndependentTestDTO createdTestDTO = convertToDTO(test, domainDTOList);
         createdTestDTO.setDomains(domainDTOList);
 
@@ -72,36 +76,12 @@ public class IndependentTestService {
         IndependentTestDTO testDTO = new IndependentTestDTO();
         testDTO.setTestsId(test.getTestsId());
         testDTO.setTestName(test.getTestName());
-//        testDTO.setDomainId(test.getDomainId());
         testDTO.setQuestionCount(test.getQuestionCount());
         testDTO.setDomains(domains);
 
         return testDTO;
     }
 
-
-//    public List<IndependentTestDTO> getAllTests() {
-//        List<IndependentTest> tests = testRepository.findAll(); // Fetch all tests from the repository
-//
-//        // Convert the list of tests to DTOs
-//        return tests.stream()
-//                .map(test -> {
-//                    // Fetch the topic for each test to include in the DTO
-//                    Topic topic = topicRepository.findById(test.getTopicId())
-//                            .orElseThrow(() -> new RuntimeException("Topic not found"));
-//
-//                    // Fetch questions based on the Topic entity
-//                    List<Question> questions = questionRepository.findByTopic(topic);
-//                    return convertToDTO(test, questions);
-//                })
-//                .collect(Collectors.toList());
-//    }
-
-
-
-
-
-    // Method to fetch courses for a specific user by their ID
     @Transactional
     public List<CourseDTO> getCoursesByUserId(Long userId) {
         Users user = userRepository.findById(userId)
@@ -114,13 +94,11 @@ public class IndependentTestService {
             courseDTO.setCourseDescription(course.getCourseDescription());
             courseDTO.setImage(course.getImage());
 
-            // Fetch and set domains and topics
             List<DomainDTO> domainDTOList = course.getDomains().stream().map(domain -> {
                 DomainDTO domainDTO = new DomainDTO();
                 domainDTO.setDomainId(domain.getDomainId());
                 domainDTO.setDomainName(domain.getDomainName());
 
-                // Fetch and set topics for each domain
                 List<TopicDTO> topicDTOList = domain.getTopics().stream().map(topic -> {
                     TopicDTO topicDTO = new TopicDTO();
                     topicDTO.setTopicId(topic.getTopicId());
@@ -136,5 +114,4 @@ public class IndependentTestService {
             return courseDTO;
         }).collect(Collectors.toList());
     }
-
 }
