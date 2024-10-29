@@ -23,10 +23,10 @@ public class EnrolledTestController {
     @Autowired
     private UserService userService;
     @Autowired
-    private EnrolledTestService enrolledTestService;
+    private EnrolledTestService independentTestService;
 
     // Endpoint to create a test using DTO and fetching Domain, Topics, and Questions
-    @PostMapping("/enrolled/CreateTests")
+    @PostMapping("enrolled/CreateTests")
     public ResponseEntity<EnrolledTestDTO> createTest(@RequestBody EnrolledTestDTO testDTO) {
         // Use IndependentTestDTO as the return type, not the entity Test
         EnrolledTestDTO createdTestDTO = testService.createTestWithDetails(testDTO);
@@ -35,29 +35,29 @@ public class EnrolledTestController {
     }
 
     // Endpoint to get a test by ID (returning DTO)
-    @GetMapping("/enrolled/{testId}")
-    public ResponseEntity<EnrolledTestDTO> getTestById(@PathVariable Long testId) {
-        return testService.getTestById(testId)
-                .map(testDTO -> new ResponseEntity<>(testDTO, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+//    @GetMapping("/{testId}")
+//    public ResponseEntity<IndependentTestDTO> getTestById(@PathVariable Long testId) {
+//        return testService.getTestById(testId)
+//                .map(testDTO -> new ResponseEntity<>(testDTO, HttpStatus.OK))
+//                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+//    }
 
     // Endpoint to get all tests
-    @GetMapping("/enrolled/GetAllTests")
-    public List<EnrolledTestDTO> getAllTests() {
-        return testService.getAllTests();
-    }
+//    @GetMapping("/GetAllTests")
+//    public List<IndependentTestDTO> getAllTests() {
+//        return testService.getAllTests();
+//    }
 
 
 
     //fetch course by independent student id
 
-    @GetMapping("/enrolled/{studentId}/courses")
+    @GetMapping("enrolled/{studentId}/courses")
     @Transactional
     public ResponseEntity<List<CourseDTO>> getCoursesByUserId(
             @PathVariable Long studentId) { // Removed the includeImage parameter
 
-        List<CourseDTO> courses = enrolledTestService.getCoursesByUserId(studentId);
+        List<CourseDTO> courses = independentTestService.getCoursesByUserId(studentId);
 
         // Map to CourseDTO
         List<CourseDTO> courseDTOList = courses.stream().map(course -> {

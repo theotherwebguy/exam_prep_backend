@@ -26,7 +26,7 @@ public class IndependentTestController {
     private IndependentTestService independentTestService;
 
     // Endpoint to create a test using DTO and fetching Domain, Topics, and Questions
-    @PostMapping("/independent/CreateTests")
+    @PostMapping("independent/CreateTests")
     public ResponseEntity<IndependentTestDTO> createTest(@RequestBody IndependentTestDTO testDTO) {
         // Use IndependentTestDTO as the return type, not the entity Test
         IndependentTestDTO createdTestDTO = testService.createTestWithDetails(testDTO);
@@ -35,24 +35,24 @@ public class IndependentTestController {
     }
 
     // Endpoint to get a test by ID (returning DTO)
-    @GetMapping("/independent/{testId}")
-    public ResponseEntity<IndependentTestDTO> getTestById(@PathVariable Long testId) {
-        return testService.getTestById(testId)
-                .map(testDTO -> new ResponseEntity<>(testDTO, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+//    @GetMapping("/{testId}")
+//    public ResponseEntity<IndependentTestDTO> getTestById(@PathVariable Long testId) {
+//        return testService.getTestById(testId)
+//                .map(testDTO -> new ResponseEntity<>(testDTO, HttpStatus.OK))
+//                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+//    }
 
     // Endpoint to get all tests
-    @GetMapping("/independent/GetAllTests")
-    public List<IndependentTestDTO> getAllTests() {
-        return testService.getAllTests();
-    }
+//    @GetMapping("/GetAllTests")
+//    public List<IndependentTestDTO> getAllTests() {
+//        return testService.getAllTests();
+//    }
 
 
 
     //fetch course by independent student id
 
-    @GetMapping("/independent/{studentId}/courses")
+    @GetMapping("independent/{studentId}/courses")
     @Transactional
     public ResponseEntity<List<CourseDTO>> getCoursesByUserId(
             @PathVariable Long studentId) { // Removed the includeImage parameter

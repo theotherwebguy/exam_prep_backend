@@ -8,7 +8,10 @@ import org.backend.examprep_backend.model.EnrolledTest;
 import org.backend.examprep_backend.model.Topic;
 import org.backend.examprep_backend.model.Question;
 import org.backend.examprep_backend.model.Users;
-import org.backend.examprep_backend.repository.*;
+import org.backend.examprep_backend.repository.EnrolledTestRepository;
+import org.backend.examprep_backend.repository.TopicRepository;
+import org.backend.examprep_backend.repository.QuestionRepository;
+import org.backend.examprep_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,96 +25,80 @@ public class EnrolledTestService {
 
     @Autowired
     private EnrolledTestRepository testRepository;
-
     @Autowired
     private TopicRepository topicRepository;
-
     @Autowired
     private QuestionRepository questionRepository;
-
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private ClassRepository classRepository;
-
-    // Fetch and create a test while fetching Domain, Topic, and Questions
     public EnrolledTestDTO createTestWithDetails(EnrolledTestDTO testDTO) {
         EnrolledTest test = new EnrolledTest();
         test.setTestName(testDTO.getTestName());
-        test.setTotalGrading(testDTO.getTotalGrading());
 
-        // Fetch the topic entity using the topicId
-        Topic topic = topicRepository.findById(testDTO.getTopicId())
-                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        List<DomainDTO> domainDTOList = testDTO.getTopicIds().stream()
+                .map(topicId -> {
+                    Topic topic = topicRepository.findById(topicId)
+                            .orElseThrow(() -> new RuntimeException("Topic not found"));
 
-        // Set the topicId in the test entity (optional based on your design)
-        test.setTopicId(topic.getTopicId());
+                    List<Question> questions = questionRepository.findByTopic(topic)
+                            .stream()
+                            .limit(testDTO.getQuestionCount())
+                            .collect(Collectors.toList());
 
-        // Fetch the class entity if applicable and set it
-//        Class enrolledClass = classRepository.findById(testDTO.getClassId()) // Add class field to DTO
-//                .orElseThrow(() -> new RuntimeException("Class not found"));
-//        test.setClassId(enrolledClass.getClassId());
+                    TopicDTO topicDTO = new TopicDTO();
+                    topicDTO.setTopicId(topic.getTopicId());
+                    topicDTO.setTopicName(topic.getTopicName());
+                    topicDTO.setQuestions(questions.stream()
+                            .map(Question::getQuestionText)
+                            .collect(Collectors.toList()));
 
-        // Fetch the questions for this topic using the Topic entity
-        List<Question> questions = questionRepository.findByTopic(topic);  // Pass the Topic entity
-        test.setQuestionCount(questions.size());
+                    DomainDTO domainDTO = new DomainDTO();
+                    domainDTO.setDomainId(topic.getDomain().getDomainId());
+                    domainDTO.setDomainName(topic.getDomain().getDomainName());
+                    domainDTO.setTopics(List.of(topicDTO));
 
-        // Save the test entity
-        EnrolledTest createdTest = testRepository.save(test);
+                    return domainDTO;
+                })
+                .collect(Collectors.toList());
 
-        // Convert the created entity to DTO and return, including question texts
-        return convertToDTO(createdTest, questions);
+        EnrolledTestDTO createdTestDTO = convertToDTO(test, domainDTOList);
+        createdTestDTO.setDomains(domainDTOList);
+
+        return createdTestDTO;
     }
 
-    // Fetch a test by ID and retrieve question texts using the topic entity
-    public Optional<EnrolledTestDTO> getTestById(Long testId) {
-        return testRepository.findById(testId).map(test -> {
-            // Fetch the topic entity using topicId
-            Topic topic = topicRepository.findById(test.getTopicId())
-                    .orElseThrow(() -> new RuntimeException("Topic not found"));
-
-            // Fetch questions based on the Topic entity
-            List<Question> questions = questionRepository.findByTopic(topic);
-            return convertToDTO(test, questions);
-        });
-    }
-
-    // Helper method to convert Test entity to DTO (assuming this method is already defined)
-    private EnrolledTestDTO convertToDTO(EnrolledTest test, List<Question> questions) {
+    private EnrolledTestDTO convertToDTO(EnrolledTest test, List<DomainDTO> domains) {
         EnrolledTestDTO testDTO = new EnrolledTestDTO();
         testDTO.setTestsId(test.getTestsId());
         testDTO.setTestName(test.getTestName());
-        testDTO.setTotalGrading(test.getTotalGrading());
-        testDTO.setDomainId(test.getDomainId());
-        testDTO.setTopicId(test.getTopicId());
+//        testDTO.setDomainId(test.getDomainId());
         testDTO.setQuestionCount(test.getQuestionCount());
-
-        // Add the question texts to the DTO
-        List<String> questionTexts = questions.stream()
-                .map(Question::getQuestionText)
-                .collect(Collectors.toList());
-        testDTO.setQuestionTexts(questionTexts);
+        testDTO.setDomains(domains);
 
         return testDTO;
     }
 
-    public List<EnrolledTestDTO> getAllTests() {
-        List<EnrolledTest> tests = testRepository.findAll(); // Fetch all tests from the repository
 
-        // Convert the list of tests to DTOs
-        return tests.stream()
-                .map(test -> {
-                    // Fetch the topic for each test to include in the DTO
-                    Topic topic = topicRepository.findById(test.getTopicId())
-                            .orElseThrow(() -> new RuntimeException("Topic not found"));
+//    public List<IndependentTestDTO> getAllTests() {
+//        List<IndependentTest> tests = testRepository.findAll(); // Fetch all tests from the repository
+//
+//        // Convert the list of tests to DTOs
+//        return tests.stream()
+//                .map(test -> {
+//                    // Fetch the topic for each test to include in the DTO
+//                    Topic topic = topicRepository.findById(test.getTopicId())
+//                            .orElseThrow(() -> new RuntimeException("Topic not found"));
+//
+//                    // Fetch questions based on the Topic entity
+//                    List<Question> questions = questionRepository.findByTopic(topic);
+//                    return convertToDTO(test, questions);
+//                })
+//                .collect(Collectors.toList());
+//    }
 
-                    // Fetch questions based on the Topic entity
-                    List<Question> questions = questionRepository.findByTopic(topic);
-                    return convertToDTO(test, questions);
-                })
-                .collect(Collectors.toList());
-    }
+
+
 
 
     // Method to fetch courses for a specific user by their ID
