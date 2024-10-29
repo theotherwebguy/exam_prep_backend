@@ -81,11 +81,40 @@ public class QuestionController {
         return dto;
     }
 
+
     @Transactional
     @GetMapping("/unmoderated/{courseId}")
     public ResponseEntity<List<QuestionDTO>> getUnmoderatedQuestionsByCourseId(@PathVariable Long courseId) {
         List<QuestionDTO> questionDTOs = questionService.getUnmoderatedQuestionsByCourseId(courseId);
         return ResponseEntity.ok(questionDTOs);
+    }
+
+    @PutMapping(value = "/update/{questionId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> updateQuestion(
+            @PathVariable Long questionId,
+            @RequestPart("questionDTO") String questionDTOJson,
+            @RequestPart(value = "pdfFile", required = false) MultipartFile pdfFile) {
+
+        try {
+            // Convert JSON string to QuestionDTO object
+            ObjectMapper objectMapper = new ObjectMapper();
+            QuestionDTO questionDTO = objectMapper.readValue(questionDTOJson, QuestionDTO.class);
+
+            // Pass questionId, questionDTO, and pdfFile to the service
+            questionService.updateQuestionWithPdf(questionId, questionDTO, pdfFile);
+            return ResponseEntity.ok("Question updated successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error while updating question: " + e.getMessage());
+        }
+    }
+
+
+    @GetMapping("/question/{questionId}")
+    public ResponseEntity<QuestionDTO> getQuestionById(@PathVariable Long questionId) {
+        Question question = questionService.getQuestionById(questionId); // Modify the service method to fetch by questionId
+        QuestionDTO questionDTO = convertToDTO(question);
+        return ResponseEntity.ok(questionDTO);
     }
 
 }
