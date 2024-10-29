@@ -138,37 +138,44 @@ public class QuestionService {
     }
 
     @Transactional
-    public void updateQuestionByModerator(Long questionId, QuestionDTO questionDTO) {
+    public void updateQuestionWithPdf(Long questionId, QuestionDTO questionDTO, MultipartFile pdfFile) throws IOException {
+        // Find the existing question
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new IllegalArgumentException("Question not found with ID: " + questionId));
+                .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
 
-        // Update fields from DTO, ensuring isModerated is set to true
+        // Update question properties
         question.setQuestionText(questionDTO.getQuestionText());
         question.setQuestionType(questionDTO.getQuestionType());
         question.setInstruction(questionDTO.getInstruction());
-        question.setPdfFileUrl(questionDTO.getPdfFileUrl());
-        question.setModerated(true);  // Always set to true
+        question.setModerated(true); // Set to true when updated by a moderator
 
-        // Set Topic
+        // Update topic if provided
         Topic topic = topicRepository.findById(questionDTO.getTopicId())
-                .orElseThrow(() -> new IllegalArgumentException("Topic not found with ID: " + questionDTO.getTopicId()));
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
         question.setTopic(topic);
 
-        // Update Answers if provided
-        if (questionDTO.getAnswers() != null) {
-            List<Answer> updatedAnswers = questionDTO.getAnswers().stream()
-                    .map(answerDTO -> {
-                        Answer answer = new Answer();
-                        answer.setAnswerText(answerDTO.getAnswerText());
-                        answer.setAnswerDescription(answerDTO.getAnswerDescription());
-                        answer.setCorrect(answerDTO.getIsCorrect());
-                        answer.setQuestion(question);
-                        return answer;
-                    }).collect(Collectors.toList());
-            question.setAnswers(updatedAnswers);
+        // If a new PDF file is provided, replace the existing one
+        if (pdfFile != null && !pdfFile.isEmpty()) {
+            validatePdfFile(pdfFile); // Ensure it’s a valid PDF
+            String pdfFilePath = saveFileToLocalDirectory(pdfFile);
+            question.setPdfFileUrl(pdfFilePath);
         }
 
-        // Save updated question
+        // Update answers: Clear existing answers and add the new ones
+        question.getAnswers().clear();  // Clear the existing list without replacing it
+        List<Answer> newAnswers = questionDTO.getAnswers().stream()
+                .map(answerDTO -> {
+                    Answer answer = new Answer();
+                    answer.setAnswerText(answerDTO.getAnswerText());
+                    answer.setAnswerDescription(answerDTO.getAnswerDescription());
+                    answer.setCorrect(answerDTO.getIsCorrect());
+                    answer.setQuestion(question);
+                    return answer;
+                }).collect(Collectors.toList());
+
+        question.getAnswers().addAll(newAnswers); // Add all new answers to the existing list
+
+        // Save the updated question
         questionRepository.save(question);
     }
 

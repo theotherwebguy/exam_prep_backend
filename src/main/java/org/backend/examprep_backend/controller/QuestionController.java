@@ -89,20 +89,26 @@ public class QuestionController {
         return ResponseEntity.ok(questionDTOs);
     }
 
-    @PutMapping("/moderate/update/{questionId}")
-    public ResponseEntity<String> updateQuestionByModerator(
+    @PutMapping(value = "/update/{questionId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> updateQuestion(
             @PathVariable Long questionId,
-            @RequestBody QuestionDTO questionDTO) {
+            @RequestPart("questionDTO") String questionDTOJson,
+            @RequestPart(value = "pdfFile", required = false) MultipartFile pdfFile) {
+
         try {
-            questionService.updateQuestionByModerator(questionId, questionDTO);
-            return ResponseEntity.ok("Question updated successfully, moderation status set to true.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            // Convert JSON string to QuestionDTO object
+            ObjectMapper objectMapper = new ObjectMapper();
+            QuestionDTO questionDTO = objectMapper.readValue(questionDTOJson, QuestionDTO.class);
+
+            // Pass questionId, questionDTO, and pdfFile to the service
+            questionService.updateQuestionWithPdf(questionId, questionDTO, pdfFile);
+            return ResponseEntity.ok("Question updated successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred. Please try again.");
+                    .body("Error while updating question: " + e.getMessage());
         }
     }
+
 
     @GetMapping("/question/{questionId}")
     public ResponseEntity<QuestionDTO> getQuestionById(@PathVariable Long questionId) {
