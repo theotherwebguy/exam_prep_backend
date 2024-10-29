@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class QuestionDTO {
+    private Long questionId;
     private String questionText;
     private Long topicId;
     private QuestionType questionType;
@@ -15,5 +16,6 @@ public class QuestionDTO {
     private String instruction;
     private MultipartFile pdfFile;  // PDF for scenario-based or image-heavy questions
     private String pdfFileUrl;
+    private boolean isModerated;
 }
 

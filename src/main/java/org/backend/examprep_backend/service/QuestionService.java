@@ -81,27 +81,6 @@ public class QuestionService {
         }
     }
 
-//    @Transactional
-//    public List<QuestionDTO> getQuestionsByTopicId(Long topicId) {
-//        List<Question> questions = questionRepository.findByTopic_TopicId(topicId);
-//        return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
-//    }
-//
-//    private QuestionDTO convertToDTO(Question question) {
-//        QuestionDTO dto = new QuestionDTO();
-//        dto.setQuestionText(question.getQuestionText());
-//        dto.setTopicId(question.getTopic().getTopicId());
-//        dto.setQuestionType(question.getQuestionType());
-//        dto.setInstruction(question.getInstruction());
-//
-//
-//
-//        dto.setPdfFile(null); // Handle PDF as needed
-//        dto.setAnswers(question.getAnswers().stream()
-//                .map(answer -> new AnswerDTO(answer.getAnswerText(), answer.isCorrect(), answer.getAnswerDescription()))
-//                .collect(Collectors.toList()));
-//        return dto;
-//    }
 
     @Transactional
     public List<Question> getQuestionsByTopicId(Long topicId) {
@@ -118,6 +97,7 @@ public class QuestionService {
     @Transactional
     public QuestionDTO convertToDTO(Question question) {
         QuestionDTO dto = new QuestionDTO();
+        dto.setQuestionId(question.getQuestionId());
         dto.setQuestionText(question.getQuestionText());
         dto.setTopicId(question.getTopic().getTopicId());
         dto.setQuestionType(question.getQuestionType());
@@ -135,6 +115,53 @@ public class QuestionService {
                 .collect(Collectors.toList()));
 
         return dto;
+    }
+
+    @Transactional
+    public void updateQuestionWithPdf(Long questionId, QuestionDTO questionDTO, MultipartFile pdfFile) throws IOException {
+        // Find the existing question
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
+
+        // Update question properties
+        question.setQuestionText(questionDTO.getQuestionText());
+        question.setQuestionType(questionDTO.getQuestionType());
+        question.setInstruction(questionDTO.getInstruction());
+        question.setModerated(true); // Set to true when updated by a moderator
+
+        // Update topic if provided
+        Topic topic = topicRepository.findById(questionDTO.getTopicId())
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        question.setTopic(topic);
+
+        // If a new PDF file is provided, replace the existing one
+        if (pdfFile != null && !pdfFile.isEmpty()) {
+            validatePdfFile(pdfFile); // Ensure it’s a valid PDF
+            String pdfFilePath = saveFileToLocalDirectory(pdfFile);
+            question.setPdfFileUrl(pdfFilePath);
+        }
+
+        // Update answers: Clear existing answers and add the new ones
+        question.getAnswers().clear();  // Clear the existing list without replacing it
+        List<Answer> newAnswers = questionDTO.getAnswers().stream()
+                .map(answerDTO -> {
+                    Answer answer = new Answer();
+                    answer.setAnswerText(answerDTO.getAnswerText());
+                    answer.setAnswerDescription(answerDTO.getAnswerDescription());
+                    answer.setCorrect(answerDTO.getIsCorrect());
+                    answer.setQuestion(question);
+                    return answer;
+                }).collect(Collectors.toList());
+
+        question.getAnswers().addAll(newAnswers); // Add all new answers to the existing list
+
+        // Save the updated question
+        questionRepository.save(question);
+    }
+
+    public Question getQuestionById(Long questionId) {
+        return questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
     }
 
 }
