@@ -137,4 +137,51 @@ public class QuestionService {
         return dto;
     }
 
+    @Transactional
+    public void updateQuestionWithPdf(Long questionId, QuestionDTO questionDTO, MultipartFile pdfFile) throws IOException {
+        // Find the existing question
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
+
+        // Update question properties
+        question.setQuestionText(questionDTO.getQuestionText());
+        question.setQuestionType(questionDTO.getQuestionType());
+        question.setInstruction(questionDTO.getInstruction());
+        question.setModerated(true); // Set to true when updated by a moderator
+
+        // Update topic if provided
+        Topic topic = topicRepository.findById(questionDTO.getTopicId())
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        question.setTopic(topic);
+
+        // If a new PDF file is provided, replace the existing one
+        if (pdfFile != null && !pdfFile.isEmpty()) {
+            validatePdfFile(pdfFile); // Ensure it’s a valid PDF
+            String pdfFilePath = saveFileToLocalDirectory(pdfFile);
+            question.setPdfFileUrl(pdfFilePath);
+        }
+
+        // Update answers: Clear existing answers and add the new ones
+        question.getAnswers().clear();  // Clear the existing list without replacing it
+        List<Answer> newAnswers = questionDTO.getAnswers().stream()
+                .map(answerDTO -> {
+                    Answer answer = new Answer();
+                    answer.setAnswerText(answerDTO.getAnswerText());
+                    answer.setAnswerDescription(answerDTO.getAnswerDescription());
+                    answer.setCorrect(answerDTO.getIsCorrect());
+                    answer.setQuestion(question);
+                    return answer;
+                }).collect(Collectors.toList());
+
+        question.getAnswers().addAll(newAnswers); // Add all new answers to the existing list
+
+        // Save the updated question
+        questionRepository.save(question);
+    }
+
+    public Question getQuestionById(Long questionId) {
+        return questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
+    }
+
 }

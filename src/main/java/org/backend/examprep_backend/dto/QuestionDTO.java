@@ -15,5 +15,6 @@ public class QuestionDTO {
     private String instruction;
     private MultipartFile pdfFile;  // PDF for scenario-based or image-heavy questions
     private String pdfFileUrl;
+    private boolean isModerated;
 }
 
