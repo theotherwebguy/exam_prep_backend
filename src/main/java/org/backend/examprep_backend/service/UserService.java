@@ -67,6 +67,7 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    // GET all user informtion by Id
     @Transactional(readOnly = true)
     public UserDto findUserById(Long userId) {
         Users user = userRepository.findById(userId)
@@ -93,7 +94,7 @@ public class UserService {
         return userDto;
     }
 
-
+    // GET all users
     @Transactional(readOnly = true)
     public List<UserDto> findAllUsers() {
     return userRepository.findAll().stream()
@@ -124,6 +125,7 @@ public class UserService {
         return userDto;
     }
 
+    // PUT / Update a user by ID
     @Transactional
     public void updateUser(Long userId, UserDto userDto) {
         // Retrieve the current user data
@@ -182,6 +184,7 @@ public class UserService {
         return userRepository.findByEmailOrContactNumber(email, contactNumber);
     }
 
+    // Method to authenticate a user
     @Transactional(readOnly = true)
     public UserDto authenticateUser(String email, String password) {
         Optional<Users> userOptional = userRepository.findByEmail(email);
@@ -213,7 +216,6 @@ public class UserService {
         userDto.setCourseIds(user.getCourses().stream().map(Course::getCourseId).collect(Collectors.toList()));
         return userDto;
     }
-
 
     // Assign courses to a user
     @Transactional
