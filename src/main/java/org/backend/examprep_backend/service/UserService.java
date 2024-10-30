@@ -1,6 +1,11 @@
 package org.backend.examprep_backend.service;
 
 import org.backend.examprep_backend.ResourceNotFoundException;
+import org.backend.examprep_backend.dto.ClassDTO;
+import org.backend.examprep_backend.dto.CourseDTO;
+import org.backend.examprep_backend.dto.UserDetailDto;
+import org.backend.examprep_backend.model.Classes;
+import org.backend.examprep_backend.repository.ClassRepository;
 import org.backend.examprep_backend.repository.CourseRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +31,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final IndependentTestService independentTestService;
+
+    @Autowired
+    private ClassRepository classRepository;
 
     // Register a new user using UserDto
     @Transactional
@@ -67,8 +76,9 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    // GET all user information by Id
     @Transactional(readOnly = true)
-    public UserDto findUserById(Long userId) {
+    public UserDetailDto findUserById(Long userId) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -80,6 +90,7 @@ public class UserService {
         userDto.setFullNames(user.getFullNames());
         userDto.setSurname(user.getSurname());
         userDto.setContactNumber(user.getContactNumber());
+        userDto.setProfileImage(user.getProfileImage());
 
         if (user.getRole() != null) {
             userDto.setRole(user.getRole().getName());
@@ -90,10 +101,22 @@ public class UserService {
             userDto.setProfileImage(user.getProfileImage());
         }
 
-        return userDto;
+        // Fetch courses
+        List<CourseDTO> courses = getCoursesByUserId(userId); //independentTestService.getCoursesByUserId(userId)
+
+        // Fetch classes
+        List<ClassDTO> classes = getClassesByUserId(userId);
+
+        // Create UserDetailDto
+        UserDetailDto userDetailDto = new UserDetailDto();
+        userDetailDto.setUser(userDto);
+        userDetailDto.setCourses(courses);
+        userDetailDto.setClasses(classes);
+
+        return userDetailDto;
     }
 
-
+    // GET all users
     @Transactional(readOnly = true)
     public List<UserDto> findAllUsers() {
     return userRepository.findAll().stream()
@@ -124,6 +147,7 @@ public class UserService {
         return userDto;
     }
 
+    // PUT / Update a user by ID
     @Transactional
     public void updateUser(Long userId, UserDto userDto) {
         // Retrieve the current user data
@@ -168,7 +192,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    //Delete a user
+    //DELETE a user
     @Transactional
     public void deleteUser(Long userId) {
         Users user = userRepository.findById(userId)
@@ -182,6 +206,7 @@ public class UserService {
         return userRepository.findByEmailOrContactNumber(email, contactNumber);
     }
 
+    // Method to authenticate a user
     @Transactional(readOnly = true)
     public UserDto authenticateUser(String email, String password) {
         Optional<Users> userOptional = userRepository.findByEmail(email);
@@ -213,7 +238,6 @@ public class UserService {
         userDto.setCourseIds(user.getCourses().stream().map(Course::getCourseId).collect(Collectors.toList()));
         return userDto;
     }
-
 
     // Assign courses to a user
     @Transactional
@@ -263,5 +287,43 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<Users> getAllLecturers() {
         return userRepository.findAllByRoleName("LECTURER");
+    }
+
+    // Method to fetch classes for a specific user by their ID
+    @Transactional(readOnly = true)
+    public List<ClassDTO> getClassesByUserId(Long userId) {
+        List<Classes> classes = classRepository.findByLecturerId(userId);
+
+        return classes.stream().map(clazz -> {
+            ClassDTO classDTO = new ClassDTO();
+            classDTO.setClassesId(clazz.getClassesId());
+            classDTO.setClassName(clazz.getClassName());
+            classDTO.setClassDescription(clazz.getClassDescription());
+            classDTO.setStartDate(clazz.getStartDate());
+            classDTO.setEndDate(clazz.getEndDate());
+            classDTO.setCourseId(clazz.getCourse().getCourseId());
+            classDTO.setCourseName(clazz.getCourse().getCourseName());
+            classDTO.setUserId(clazz.getLecturer().getId());
+            classDTO.setLecturerName(clazz.getLecturer().getFullNames());
+            classDTO.setLecturerEmail(clazz.getLecturer().getEmail());
+
+            return classDTO;
+        }).collect(Collectors.toList());
+    }
+
+    // Method to fetch courses for a specific user by their ID
+    @Transactional(readOnly = true)
+    public List<CourseDTO> getCoursesByUserId(Long userId) {
+        List<Course> courses = courseRepository.findCoursesByUserId(userId);
+
+        return courses.stream().map(course -> {
+            CourseDTO courseDTO = new CourseDTO();
+            courseDTO.setCourseId(course.getCourseId());
+            courseDTO.setCourseName(course.getCourseName());
+            courseDTO.setCourseDescription(course.getCourseDescription());
+
+
+            return courseDTO;
+        }).collect(Collectors.toList());
     }
 }

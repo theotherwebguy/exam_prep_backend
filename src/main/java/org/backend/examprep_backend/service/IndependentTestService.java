@@ -1,17 +1,13 @@
 package org.backend.examprep_backend.service;
 
-import org.backend.examprep_backend.dto.IndependentTestDTO;
-import org.backend.examprep_backend.model.IndependentTest;
-import org.backend.examprep_backend.model.Topic;
-import org.backend.examprep_backend.model.Question;
-import org.backend.examprep_backend.repository.IndependentTestRepository;
-import org.backend.examprep_backend.repository.TopicRepository;
-import org.backend.examprep_backend.repository.QuestionRepository;
+import org.backend.examprep_backend.dto.*;
+import org.backend.examprep_backend.model.*;
+import org.backend.examprep_backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,77 +22,140 @@ public class IndependentTestService {
     @Autowired
     private QuestionRepository questionRepository;
 
-    // Fetch and create a test while fetching Domain, Topic, and Questions
-    public IndependentTestDTO createTestWithDetails(IndependentTestDTO testDTO) {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private TestReviewRepository testReviewRepository;
+
+    @Autowired
+    private AnswerRepository answerRepository;
+
+    public IndependentTestDTO createTestWithDetails(IndependentTestDTO testDTO, Long studentId) {
         IndependentTest test = new IndependentTest();
         test.setTestName(testDTO.getTestName());
-        test.setTotalGrading(testDTO.getTotalGrading());
+        test.setQuestionCount(testDTO.getQuestionCount());
+        test = testRepository.save(test);
 
-        // Fetch the topic entity using the topicId
-        Topic topic = topicRepository.findById(testDTO.getTopicId())
-                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        IndependentTest finalTest = test;
+        List<DomainDTO> domainDTOList = testDTO.getTopicIds().stream()
+                .map(topicId -> {
+                    Topic topic = topicRepository.findById(topicId)
+                            .orElseThrow(() -> new RuntimeException("Topic not found"));
 
-        // Set the topicId in the test entity (optional based on your design)
-        test.setTopicId(topic.getTopicId());
+                    List<Question> questions = questionRepository.findByTopic(topic)
+                            .stream()
+                            .limit(testDTO.getQuestionCount())
+                            .collect(Collectors.toList());
 
-        // Fetch the questions for this topic using the Topic entity
-        List<Question> questions = questionRepository.findByTopic(topic);  // Pass the Topic entity
-        test.setQuestionCount(questions.size());
+                    questions.forEach(question -> {
+                        List<Answer> fetchedAnswers = answerRepository.findByQuestion(question);
+                        question.setAnswers(fetchedAnswers);
+                    });
 
-        // Save the test entity
-        IndependentTest createdTest = testRepository.save(test);
+                    questions.forEach(question -> {
+                        TestReview testReview = new TestReview();
+                        testReview.setTestId(finalTest.getTestsId());
+                        testReview.setStudentId(studentId);
+                        testReview.setQuestionId(question.getQuestionId());
+                        testReview.setSelectedAnswerId(null);
+                        testReview.setIsCorrect(false);
+                        testReview.setScore(0);
+                        testReviewRepository.save(testReview);
+                    });
 
-        // Convert the created entity to DTO and return, including question texts
-        return convertToDTO(createdTest, questions);
+                    TopicDTO topicDTO = new TopicDTO();
+                    topicDTO.setTopicId(topic.getTopicId());
+                    topicDTO.setTopicName(topic.getTopicName());
+                    topicDTO.setQuestions(questions.stream()
+                            .map(q -> {
+                                QuestionDTO questionDTO = new QuestionDTO();
+                                questionDTO.setQuestionId(q.getQuestionId());
+                                questionDTO.setQuestionText(q.getQuestionText());
+
+                                questionDTO.setAnswers(q.getAnswers().stream()
+                                        .map(a -> {
+                                            AnswerDTO answerDTO = new AnswerDTO();
+                                            answerDTO.setAnswerId(a.getAnswerId());
+                                            answerDTO.setAnswerText(a.getAnswerText());
+                                            return answerDTO;
+                                        })
+                                        .collect(Collectors.toList()));
+                                return questionDTO;
+                            })
+                            .collect(Collectors.toList()));
+
+                    DomainDTO domainDTO = new DomainDTO();
+                    domainDTO.setDomainId(topic.getDomain().getDomainId());
+                    domainDTO.setDomainName(topic.getDomain().getDomainName());
+                    domainDTO.setTopics(List.of(topicDTO));
+
+                    return domainDTO;
+                })
+                .collect(Collectors.toList());
+
+        IndependentTestDTO createdTestDTO = convertToDTO(test, domainDTOList);
+        createdTestDTO.setDomains(domainDTOList);
+
+        return createdTestDTO;
     }
 
-    // Fetch a test by ID and retrieve question texts using the topic entity
-    public Optional<IndependentTestDTO> getTestById(Long testId) {
-        return testRepository.findById(testId).map(test -> {
-            // Fetch the topic entity using topicId
-            Topic topic = topicRepository.findById(test.getTopicId())
-                    .orElseThrow(() -> new RuntimeException("Topic not found"));
-
-            // Fetch questions based on the Topic entity
-            List<Question> questions = questionRepository.findByTopic(topic);
-            return convertToDTO(test, questions);
-        });
-    }
-
-    // Helper method to convert Test entity to DTO (assuming this method is already defined)
-    private IndependentTestDTO convertToDTO(IndependentTest test, List<Question> questions) {
+    private IndependentTestDTO convertToDTO(IndependentTest test, List<DomainDTO> domains) {
         IndependentTestDTO testDTO = new IndependentTestDTO();
         testDTO.setTestsId(test.getTestsId());
         testDTO.setTestName(test.getTestName());
-        testDTO.setTotalGrading(test.getTotalGrading());
-        testDTO.setDomainId(test.getDomainId());
-        testDTO.setTopicId(test.getTopicId());
         testDTO.setQuestionCount(test.getQuestionCount());
-
-        // Add the question texts to the DTO
-        List<String> questionTexts = questions.stream()
-                .map(Question::getQuestionText)
-                .collect(Collectors.toList());
-        testDTO.setQuestionTexts(questionTexts);
-
+        testDTO.setDomains(domains);
         return testDTO;
     }
 
-    public List<IndependentTestDTO> getAllTests() {
-        List<IndependentTest> tests = testRepository.findAll(); // Fetch all tests from the repository
+    @Transactional
+    public List<CourseDTO> getCoursesByUserId(Long userId) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Convert the list of tests to DTOs
-        return tests.stream()
-                .map(test -> {
-                    // Fetch the topic for each test to include in the DTO
-                    Topic topic = topicRepository.findById(test.getTopicId())
-                            .orElseThrow(() -> new RuntimeException("Topic not found"));
+        return user.getCourses().stream().map(course -> {
+            CourseDTO courseDTO = new CourseDTO();
+            courseDTO.setCourseId(course.getCourseId());
+            courseDTO.setCourseName(course.getCourseName());
+            courseDTO.setCourseDescription(course.getCourseDescription());
+            courseDTO.setImage(course.getImage());
 
-                    // Fetch questions based on the Topic entity
-                    List<Question> questions = questionRepository.findByTopic(topic);
-                    return convertToDTO(test, questions);
-                })
-                .collect(Collectors.toList());
+            List<DomainDTO> domainDTOList = course.getDomains().stream().map(domain -> {
+                DomainDTO domainDTO = new DomainDTO();
+                domainDTO.setDomainId(domain.getDomainId());
+                domainDTO.setDomainName(domain.getDomainName());
+
+                List<TopicDTO> topicDTOList = domain.getTopics().stream().map(topic -> {
+                    TopicDTO topicDTO = new TopicDTO();
+                    topicDTO.setTopicId(topic.getTopicId());
+                    topicDTO.setTopicName(topic.getTopicName());
+                    return topicDTO;
+                }).collect(Collectors.toList());
+
+                domainDTO.setTopics(topicDTOList);
+                return domainDTO;
+            }).collect(Collectors.toList());
+
+            courseDTO.setDomains(domainDTOList);
+            return courseDTO;
+        }).collect(Collectors.toList());
     }
 
+    public List<TestReviewDTO> findByStudentId(Long studentId) {
+        List<TestReview> reviews = testReviewRepository.findByStudentId(studentId);
+        return reviews.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    private TestReviewDTO convertToDTO(TestReview review) {
+        TestReviewDTO dto = new TestReviewDTO();
+        dto.setId(review.getId());
+        dto.setStudentId(review.getStudentId());
+        dto.setTestId(review.getTestId());
+        dto.setQuestionId(review.getQuestionId());
+        dto.setSelectedAnswerId(review.getSelectedAnswerId());
+        dto.setIsCorrect(review.getIsCorrect());
+        dto.setScore(review.getScore());
+        return dto;
+    }
 }

@@ -15,8 +15,6 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     Optional<Users> findByEmail(String email);
     Optional<Users> findByEmailOrContactNumber(String email, String contactNumber);
 
-
-
     // Custom query to find users by role name
     @Query("SELECT u FROM Users u JOIN u.role r WHERE r.name = :roleName")
     List<Users> findAllByRoleName(@Param("roleName") String roleName);
@@ -26,6 +24,7 @@ public interface UserRepository extends JpaRepository<Users, Long> {
             "JOIN FETCH sc.course c " +
             "JOIN FETCH sc.lecturer l " +
             "WHERE u.id = :studentId")
+
     Optional<Users> findStudentWithClassesCoursesAndLecturers(@Param("studentId") Long studentId);
 
 }
