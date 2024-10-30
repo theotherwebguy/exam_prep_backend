@@ -1,9 +1,10 @@
 package org.backend.examprep_backend.model;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.Map;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -14,33 +15,18 @@ public class Test {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long testsId;
 
-    @Column(nullable = false)
     private String testName;
-
-    @Column(nullable = false)
+    private Integer totalGrade;
+    private Integer questionCount;
+    private String instructions;
     private Date dueDate;
-
-    @Column(columnDefinition = "TEXT")
-    private String testInstructions;
-
-    @Column(nullable = false)
-    private int totalGrading;
-
-    @Column(nullable = false)
     private String testDuration;
 
-    @ManyToOne
-    @JoinColumn(name = "classId")
-    private Classes classes;
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Question> questions;
 
-    @ElementCollection
-    @CollectionTable(name = "test_topics", joinColumns = @JoinColumn(name = "test_id"))
-    @MapKeyColumn(name = "domain")
-    @Column(name = "topic_count")
-    private Map<String, Integer> selectedTopics;
-
-    @Column(nullable = false)
-    private Integer totalWeight;
-
-    // Getters and Setters
+    // Add the class relationship
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_id", nullable = false) // Foreign key
+    private Classes classes; // Link to Classes entity
 }

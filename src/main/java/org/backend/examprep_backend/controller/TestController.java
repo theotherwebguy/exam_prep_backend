@@ -18,9 +18,9 @@ public class TestController {
         this.testService = testService;
     }
 
-    @PostMapping("/generate")
-    public ResponseEntity<Test> generateTest(@RequestBody TestDTO testDTO) {
-        Test createdTest = testService.generateTest(testDTO);
+    @PostMapping("/create")
+    public ResponseEntity<Test> createTest(@RequestBody TestDTO testDTO) {
+        Test createdTest = testService.createTestWithDetails(testDTO);
         return ResponseEntity.ok(createdTest);
     }
 }
