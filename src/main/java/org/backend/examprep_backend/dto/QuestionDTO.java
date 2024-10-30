@@ -10,6 +10,7 @@ import java.util.List;
 
 @Data
 public class QuestionDTO {
+    private Long courseId;
     private Long questionId;
     private String questionText;
     private Long topicId;
