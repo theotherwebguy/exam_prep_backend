@@ -3,9 +3,7 @@ package org.backend.examprep_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.backend.examprep_backend.dto.AnswerDTO;
 import org.backend.examprep_backend.dto.QuestionDTO;
-import org.backend.examprep_backend.model.Domain;
 import org.backend.examprep_backend.model.Question;
-import org.backend.examprep_backend.model.Topic;
 import org.backend.examprep_backend.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -65,25 +63,11 @@ public class QuestionController {
 
     private QuestionDTO convertToDTO(Question question) {
         QuestionDTO dto = new QuestionDTO();
-        dto.setQuestionId(question.getQuestionId());
         dto.setQuestionText(question.getQuestionText());
         dto.setTopicId(question.getTopic().getTopicId());
         dto.setQuestionType(question.getQuestionType());
         dto.setInstruction(question.getInstruction());
-        dto.setPdfFileUrl(question.getPdfFileUrl()); // Add this if you modify QuestionDTO to include i
-
-       //set Topic and Domain information
-        Topic topic = question.getTopic();
-        dto.setTopicId(topic.getTopicId());
-        dto.setTopicName(topic.getTopicName());
-
-        Domain domain = topic.getDomain();
-        if(domain!=null){
-            dto.setDomainId(domain.getDomainId());
-            dto.setDomainName(domain.getDomainName());
-        }
-
-
+//        dto.setPdfFileUrl(question.getPdfFileUrl()); // Add this if you modify QuestionDTO to include i
         // Handle answers if needed
         dto.setAnswers(question.getAnswers().stream()
                 .map(answer -> {

@@ -16,7 +16,7 @@ public class IndependentTest {
 
     private String testName;
 
-    private int totalGrading;
+    private QuestionType questionType;
 
     // Foreign key references
     private Long domainId;     // Foreign key reference to Domain

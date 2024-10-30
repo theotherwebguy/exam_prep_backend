@@ -2,6 +2,9 @@ package org.backend.examprep_backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
 @Data
@@ -29,8 +32,10 @@ public class Question {
     @JoinColumn(name = "topic_id", nullable = false)
     private Topic topic;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Answer> answers;  // List of possible answers
+    // Add this field for the relationship with answers
+
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Answer> answers; // This field holds the answers for the question
 
     @Column(nullable = false)
     private boolean isModerated = false;  // Default to false
