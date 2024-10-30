@@ -145,7 +145,6 @@ public class ClassController {
     }
 
 
-
     @DeleteMapping("/with-students/{classId}")
     public ResponseEntity<String> deleteClass(@PathVariable Long classId) {
         classService.deleteClass(classId);
@@ -158,7 +157,4 @@ public class ClassController {
         LecturerClassCourseDTO lecturerDetails = classService.getCourseDetailsForLecturer(lecturerId);
         return ResponseEntity.ok(lecturerDetails);
     }
-
-
-
 }
