@@ -2,9 +2,13 @@ package org.backend.examprep_backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
 @Entity
+@Getter
+@Setter
 @Table(name = "answer")
 public class Answer {
 
@@ -29,5 +33,7 @@ public class Answer {
     public boolean isCorrect() {
         return isCorrect;
     }
+
+    private String answers;
 
 }

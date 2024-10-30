@@ -3,6 +3,7 @@ package org.backend.examprep_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.backend.examprep_backend.dto.UserDto;
+import org.backend.examprep_backend.dto.UserDetailDto;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Role;
 import org.backend.examprep_backend.model.Users;
@@ -115,8 +116,10 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserById(@PathVariable Long userId) {
         try {
-            UserDto userDto = userService.findUserById(userId); // Call the service method
-            return ResponseEntity.ok(userDto);
+            // Call the service method to retrieve UserDetailDto
+            UserDetailDto userDetailDto = userService.findUserById(userId);
+
+            return ResponseEntity.ok(userDetailDto); // Return the enhanced DTO
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         } catch (Exception e) {

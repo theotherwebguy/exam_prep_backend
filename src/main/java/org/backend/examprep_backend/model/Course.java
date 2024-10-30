@@ -36,4 +36,13 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Classes> classes;
 
+    // Many-to-Many relationship with Users
+    @ManyToMany
+    @JoinTable(
+            name = "user_course", // Join table name
+            joinColumns = @JoinColumn(name = "course_id"), // Foreign key for Course
+            inverseJoinColumns = @JoinColumn(name = "user_id") // Foreign key for Users
+    )
+    private Set<Users> users;
+
 }
