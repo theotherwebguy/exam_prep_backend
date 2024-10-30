@@ -67,7 +67,7 @@ public class QuestionController {
         dto.setTopicId(question.getTopic().getTopicId());
         dto.setQuestionType(question.getQuestionType());
         dto.setInstruction(question.getInstruction());
-        dto.setPdfFileUrl(question.getPdfFileUrl()); // Add this if you modify QuestionDTO to include i
+//        dto.setPdfFileUrl(question.getPdfFileUrl()); // Add this if you modify QuestionDTO to include i
         // Handle answers if needed
         dto.setAnswers(question.getAnswers().stream()
                 .map(answer -> {

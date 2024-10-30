@@ -1,23 +1,13 @@
 package org.backend.examprep_backend.service;
 
-import org.backend.examprep_backend.dto.CourseDTO;
-import org.backend.examprep_backend.dto.DomainDTO;
-import org.backend.examprep_backend.dto.IndependentTestDTO;
-import org.backend.examprep_backend.dto.TopicDTO;
-import org.backend.examprep_backend.model.IndependentTest;
-import org.backend.examprep_backend.model.Topic;
-import org.backend.examprep_backend.model.Question;
-import org.backend.examprep_backend.model.Users;
-import org.backend.examprep_backend.repository.IndependentTestRepository;
-import org.backend.examprep_backend.repository.TopicRepository;
-import org.backend.examprep_backend.repository.QuestionRepository;
-import org.backend.examprep_backend.repository.UserRepository;
+import org.backend.examprep_backend.dto.*;
+import org.backend.examprep_backend.model.*;
+import org.backend.examprep_backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,20 +15,29 @@ public class IndependentTestService {
 
     @Autowired
     private IndependentTestRepository testRepository;
+
     @Autowired
     private TopicRepository topicRepository;
+
     @Autowired
     private QuestionRepository questionRepository;
+
     @Autowired
     private UserRepository userRepository;
 
-    public IndependentTestDTO createTestWithDetails(IndependentTestDTO testDTO) {
+    @Autowired
+    private TestReviewRepository testReviewRepository;
+
+    @Autowired
+    private AnswerRepository answerRepository;
+
+    public IndependentTestDTO createTestWithDetails(IndependentTestDTO testDTO, Long studentId) {
         IndependentTest test = new IndependentTest();
         test.setTestName(testDTO.getTestName());
-
-        // Save the test to generate ID
+        test.setQuestionCount(testDTO.getQuestionCount());
         test = testRepository.save(test);
 
+        IndependentTest finalTest = test;
         List<DomainDTO> domainDTOList = testDTO.getTopicIds().stream()
                 .map(topicId -> {
                     Topic topic = topicRepository.findById(topicId)
@@ -49,11 +48,41 @@ public class IndependentTestService {
                             .limit(testDTO.getQuestionCount())
                             .collect(Collectors.toList());
 
+                    questions.forEach(question -> {
+                        List<Answer> fetchedAnswers = answerRepository.findByQuestion(question);
+                        question.setAnswers(fetchedAnswers);
+                    });
+
+                    questions.forEach(question -> {
+                        TestReview testReview = new TestReview();
+                        testReview.setTestId(finalTest.getTestsId());
+                        testReview.setStudentId(studentId);
+                        testReview.setQuestionId(question.getQuestionId());
+                        testReview.setSelectedAnswerId(null);
+                        testReview.setIsCorrect(false);
+                        testReview.setScore(0);
+                        testReviewRepository.save(testReview);
+                    });
+
                     TopicDTO topicDTO = new TopicDTO();
                     topicDTO.setTopicId(topic.getTopicId());
                     topicDTO.setTopicName(topic.getTopicName());
                     topicDTO.setQuestions(questions.stream()
-                            .map(Question::getQuestionText)
+                            .map(q -> {
+                                QuestionDTO questionDTO = new QuestionDTO();
+                                questionDTO.setQuestionId(q.getQuestionId());
+                                questionDTO.setQuestionText(q.getQuestionText());
+
+                                questionDTO.setAnswers(q.getAnswers().stream()
+                                        .map(a -> {
+                                            AnswerDTO answerDTO = new AnswerDTO();
+                                            answerDTO.setAnswerId(a.getAnswerId());
+                                            answerDTO.setAnswerText(a.getAnswerText());
+                                            return answerDTO;
+                                        })
+                                        .collect(Collectors.toList()));
+                                return questionDTO;
+                            })
                             .collect(Collectors.toList()));
 
                     DomainDTO domainDTO = new DomainDTO();
@@ -65,7 +94,6 @@ public class IndependentTestService {
                 })
                 .collect(Collectors.toList());
 
-        // Convert to DTO and set domains
         IndependentTestDTO createdTestDTO = convertToDTO(test, domainDTOList);
         createdTestDTO.setDomains(domainDTOList);
 
@@ -78,7 +106,6 @@ public class IndependentTestService {
         testDTO.setTestName(test.getTestName());
         testDTO.setQuestionCount(test.getQuestionCount());
         testDTO.setDomains(domains);
-
         return testDTO;
     }
 
@@ -113,5 +140,22 @@ public class IndependentTestService {
             courseDTO.setDomains(domainDTOList);
             return courseDTO;
         }).collect(Collectors.toList());
+    }
+
+    public List<TestReviewDTO> findByStudentId(Long studentId) {
+        List<TestReview> reviews = testReviewRepository.findByStudentId(studentId);
+        return reviews.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    private TestReviewDTO convertToDTO(TestReview review) {
+        TestReviewDTO dto = new TestReviewDTO();
+        dto.setId(review.getId());
+        dto.setStudentId(review.getStudentId());
+        dto.setTestId(review.getTestId());
+        dto.setQuestionId(review.getQuestionId());
+        dto.setSelectedAnswerId(review.getSelectedAnswerId());
+        dto.setIsCorrect(review.getIsCorrect());
+        dto.setScore(review.getScore());
+        return dto;
     }
 }
