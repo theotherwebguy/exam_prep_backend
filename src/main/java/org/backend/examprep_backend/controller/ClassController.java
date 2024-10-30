@@ -145,7 +145,6 @@ public class ClassController {
     }
 
 
-
     @DeleteMapping("/with-students/{classId}")
     public ResponseEntity<String> deleteClass(@PathVariable Long classId) {
         classService.deleteClass(classId);

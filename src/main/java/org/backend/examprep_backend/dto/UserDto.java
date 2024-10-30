@@ -41,4 +41,6 @@ public class UserDto {
 
     private List<Long> courseIds;
 
+    private List<Long> classIds;
+
 }

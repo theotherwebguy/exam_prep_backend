@@ -89,6 +89,7 @@ public class ClassService {
         // Return the newly created class
         return createdClass;
     }
+
 @Transactional
     public List<ClassResponseDTO> getAllClassesWithStudents() {
         List<Classes> classEntities = classRepository.findAll();
@@ -212,8 +213,6 @@ public class ClassService {
         classRepository.delete(classToDelete);
     }
 
-
-
     @Transactional
     public LecturerClassCourseDTO getCourseDetailsForLecturer(Long lecturerId) {
         // Validate that the lecturer exists and is assigned the correct role
@@ -288,7 +287,6 @@ public class ClassService {
         lecturerDTO.setCourses(courseDTOs);
         return lecturerDTO;
     }
-
 
 
 }
