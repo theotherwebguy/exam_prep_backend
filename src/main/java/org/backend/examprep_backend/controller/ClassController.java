@@ -157,7 +157,4 @@ public class ClassController {
         LecturerClassCourseDTO lecturerDetails = classService.getCourseDetailsForLecturer(lecturerId);
         return ResponseEntity.ok(lecturerDetails);
     }
-
-
-
 }

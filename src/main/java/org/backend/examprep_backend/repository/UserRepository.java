@@ -24,6 +24,7 @@ public interface UserRepository extends JpaRepository<Users, Long> {
             "JOIN FETCH sc.course c " +
             "JOIN FETCH sc.lecturer l " +
             "WHERE u.id = :studentId")
+
     Optional<Users> findStudentWithClassesCoursesAndLecturers(@Param("studentId") Long studentId);
 
 }
