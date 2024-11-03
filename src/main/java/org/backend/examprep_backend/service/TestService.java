@@ -52,7 +52,12 @@ public class TestService {
                     .orElseThrow(() -> new RuntimeException("Topic not found"));
 
             // Fetch questions for the topic
-            List<Question> questions = questionRepository.findByTopic(topic);
+            //List<Question> questions = questionRepository.findByTopicAndIsModeratedTrue(topic);
+            List<Question> questions = questionRepository.findByTopic(topic)
+                    .stream()
+                    .filter(Question::isModerated)
+                    .collect(Collectors.toList());
+
             List<Question> limitedQuestions = new ArrayList<>();
 
             // Limit the number of questions fetched based on the requested question count
@@ -76,7 +81,7 @@ public class TestService {
         }
 
         // Set the total question count to the test entity
-        test.setQuestionCount(totalQuestionCount); // Set the count here
+        test.setQuestionCount(totalQuestionCount);
 
         // Save the modified test entity with associated questions
         testRepository.save(test);
@@ -121,7 +126,6 @@ public class TestService {
         return domainDTO;
     }
 
-    // Helper method to map Question to QuestionDTO
 // Helper method to map Question to QuestionDTO
     private QuestionDTO mapQuestionToDTO(Question question) {
         QuestionDTO questionDTO = new QuestionDTO();
