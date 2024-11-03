@@ -11,9 +11,9 @@ public class TestAnswer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long testAnswerId;
 
-    @ManyToOne
-    @JoinColumn(name = "submissionId")
-    private TestSubmission testSubmission;
+//    @ManyToOne
+//    @JoinColumn(name = "submissionId")
+//    private TestSubmission testSubmission;
 
     @ManyToOne
     @JoinColumn(name = "questionId")
