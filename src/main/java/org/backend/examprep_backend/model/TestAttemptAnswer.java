@@ -5,29 +5,22 @@ import lombok.Data;
 
 @Data
 @Entity
-public class TestQuestion {
+public class TestAttemptAnswer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "test_attempt_id")
+    @JoinColumn(name = "test_attempt_id", nullable = false)
     private TestAttempt testAttempt;
-
-    @ManyToOne
-    @JoinColumn(name = "test_id", nullable = false)
-    private Test test;
 
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
+    @ManyToOne
+    @JoinColumn(name = "selected_answer_id", nullable = true) // nullable if unanswered
+    private Answer selectedAnswer;
+
     private Boolean isCorrect;
-
-    private Long selectedAnswerId;
-
-    private Integer score;
-
-    // getters and setters
 }
-

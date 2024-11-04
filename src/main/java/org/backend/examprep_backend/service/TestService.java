@@ -1,18 +1,11 @@
 package org.backend.examprep_backend.service;
 
-import org.backend.examprep_backend.dto.AnswerDTO;
-import org.backend.examprep_backend.dto.DomainDTO;
-import org.backend.examprep_backend.dto.QuestionDTO;
-import org.backend.examprep_backend.dto.TopicDTO;
-import org.backend.examprep_backend.dto.TestCreationRequestDTO;
-import org.backend.examprep_backend.dto.TestDTO;
+import org.backend.examprep_backend.dto.*;
 import org.backend.examprep_backend.model.*;
-import org.backend.examprep_backend.repository.TopicRepository;
-import org.backend.examprep_backend.repository.TestRepository;
-import org.backend.examprep_backend.repository.QuestionRepository;
-import org.backend.examprep_backend.repository.AnswerRepository;
+import org.backend.examprep_backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.*;
@@ -25,6 +18,12 @@ public class TestService {
     private TestRepository testRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private TestAttemptRepository testAttemptRepository;
+
+    @Autowired
     private QuestionRepository questionRepository;
 
     @Autowired
@@ -33,6 +32,10 @@ public class TestService {
     @Autowired
     private TopicRepository topicRepository;
 
+    @Autowired
+    private TestAttemptAnswerRepository testAttemptAnswerRepository;
+
+    @Transactional
     public TestDTO createTest(TestCreationRequestDTO request, Long studentId) {
         // Create a new Test entity
         Test test = new Test();
@@ -51,11 +54,11 @@ public class TestService {
             Topic topic = topicRepository.findById(topicId)
                     .orElseThrow(() -> new RuntimeException("Topic not found"));
 
-            // Fetch questions for the topic
             //List<Question> questions = questionRepository.findByTopicAndIsModeratedTrue(topic);
             List<Question> questions = questionRepository.findByTopic(topic)
                     .stream()
                     .filter(Question::isModerated)
+                    .limit(questionCount)
                     .collect(Collectors.toList());
 
             List<Question> limitedQuestions = new ArrayList<>();
@@ -89,8 +92,6 @@ public class TestService {
         // Map to TestDTO for response
         return mapToTestDTO(test, domainDTOList);
     }
-
-
     // Helper method to create TestQuestion entries
     private TestQuestion createTestQuestion(Test test, Question question) {
         TestQuestion testQuestion = new TestQuestion();
@@ -105,7 +106,6 @@ public class TestService {
 
         return testQuestion;
     }
-
     // Helper method to create DomainDTO from a Topic and its Questions
     private DomainDTO createDomainDTO(Topic topic, List<Question> questions) {
         TopicDTO topicDTO = new TopicDTO();
@@ -125,8 +125,7 @@ public class TestService {
 
         return domainDTO;
     }
-
-// Helper method to map Question to QuestionDTO
+    // Helper method to map Question to QuestionDTO
     private QuestionDTO mapQuestionToDTO(Question question) {
         QuestionDTO questionDTO = new QuestionDTO();
         questionDTO.setQuestionId(question.getQuestionId());
@@ -147,8 +146,6 @@ public class TestService {
 
         return questionDTO;
     }
-
-
     // Helper method to map Test entity to TestDTO for response
     private TestDTO mapToTestDTO(Test test, List<DomainDTO> domainDTOList) {
         TestDTO testDTO = new TestDTO();
@@ -156,6 +153,102 @@ public class TestService {
         testDTO.setTestName(test.getName());
         testDTO.setDomains(domainDTOList);
         return testDTO;
+    }
+
+    @Transactional
+    public TestAttemptDTO startTest(Long testId, Long studentId) {
+        Test test = testRepository.findById(testId)
+                .orElseThrow(() -> new RuntimeException("Test not found"));
+        Users student = userRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        TestAttempt testAttempt = new TestAttempt();
+        testAttempt.setTest(test);
+        testAttempt.setStudent(student);
+        testAttempt.setCompleted(false);
+        testAttemptRepository.save(testAttempt);
+
+        List<QuestionDTO> questionDTOs = test.getTestQuestions().stream()
+                .map(testQuestion -> mapQuestionToDTO(testQuestion.getQuestion()))
+                .collect(Collectors.toList());
+
+        TestAttemptDTO testAttemptDTO = new TestAttemptDTO();
+        testAttemptDTO.setTestId(test.getId());
+        testAttemptDTO.setTestName(test.getName());
+        testAttemptDTO.setQuestions(questionDTOs);
+
+        return testAttemptDTO;
+    }
+    @Transactional
+    public void submitAnswers(Long testAttemptId, List<TestAttemptAnswerDTO> answers) {
+        TestAttempt testAttempt = testAttemptRepository.findById(testAttemptId)
+                .orElseThrow(() -> new RuntimeException("Test attempt not found"));
+
+        int score = 0;
+
+        for (TestAttemptAnswerDTO answerDTO : answers) {
+            Question question = questionRepository.findById(answerDTO.getQuestionId())
+                    .orElseThrow(() -> new RuntimeException("Question not found"));
+
+            Answer selectedAnswer = answerRepository.findById(answerDTO.getSelectedAnswerId())
+                    .orElse(null); // could be null if unanswered
+
+            boolean isCorrect = selectedAnswer != null && selectedAnswer.isCorrect();
+
+            TestAttemptAnswer testAttemptAnswer = new TestAttemptAnswer();
+            testAttemptAnswer.setTestAttempt(testAttempt);
+            testAttemptAnswer.setQuestion(question);
+            testAttemptAnswer.setSelectedAnswer(selectedAnswer);
+            testAttemptAnswer.setIsCorrect(isCorrect);
+
+            if (isCorrect) score++;
+
+            testAttemptAnswerRepository.save(testAttemptAnswer);
+        }
+
+        testAttempt.setScore(score);
+        testAttempt.setCompleted(true);
+        testAttemptRepository.save(testAttempt);
+    }
+
+    @Transactional
+    public List<TestReviewDTO> reviewTest(Long testAttemptId) {
+        TestAttempt testAttempt = testAttemptRepository.findById(testAttemptId)
+                .orElseThrow(() -> new RuntimeException("Test attempt not found"));
+
+        List<TestReviewDTO> reviewDTOs = new ArrayList<>();
+
+        for (TestAttemptAnswer attemptAnswer : testAttempt.getAnswers()) {
+            Question question = attemptAnswer.getQuestion();
+            TestReviewDTO reviewDTO = new TestReviewDTO();
+            reviewDTO.setQuestionId(question.getQuestionId());
+            reviewDTO.setQuestionText(question.getQuestionText());
+
+            // Retrieve all answers for the question
+            List<AnswerDTO> answerDTOs = question.getAnswers().stream().map(answer -> {
+                AnswerDTO answerDTO = new AnswerDTO();
+                answerDTO.setAnswerId(answer.getAnswerId());
+                answerDTO.setAnswerText(answer.getAnswerText());
+                answerDTO.setIsCorrect(answer.isCorrect());
+                return answerDTO;
+            }).collect(Collectors.toList());
+
+            reviewDTO.setAnswers(answerDTOs);
+
+            // Set the selected answer and correct answer
+            reviewDTO.setSelectedAnswerId(attemptAnswer.getSelectedAnswer() != null ?
+                    attemptAnswer.getSelectedAnswer().getAnswerId() : null);
+            reviewDTO.setCorrectAnswerId(question.getAnswers().stream()
+                    .filter(Answer::isCorrect)
+                    .findFirst()
+                    .map(Answer::getAnswerId)
+                    .orElse(null));
+
+            reviewDTO.setCorrect(attemptAnswer.getIsCorrect());
+            reviewDTOs.add(reviewDTO);
+        }
+
+        return reviewDTOs;
     }
 }
 
