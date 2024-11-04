@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface TestRepository extends JpaRepository<Test, Long> {
-    List<Test> findByClasses(Classes classes);  // Find tests by class
+
 }
