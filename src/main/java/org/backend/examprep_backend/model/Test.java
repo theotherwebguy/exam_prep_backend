@@ -3,7 +3,9 @@ package org.backend.examprep_backend.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -18,6 +20,19 @@ public class Test {
 
     @Column(nullable = false) // Ensure this column cannot be null
     private Integer questionCount;
+
+    private LocalDateTime dueDate;
+
+    private Integer duration; // Duration in minutes
+
+    @Column(columnDefinition = "text")
+    private String instruction;
+
+    private Integer totalGrade;
+
+    @ManyToOne
+    @JoinColumn(name = "class_id", nullable = true)
+    private Classes classAssigned;
 
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
     private List<TestQuestion> testQuestions = new ArrayList<>();

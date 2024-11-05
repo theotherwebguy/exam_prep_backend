@@ -56,4 +56,10 @@ public class TestController {
                     .body(Collections.emptyList());
         }
     }
+
+    @PostMapping("/create-by-lecturer")
+    public ResponseEntity<TestDTO> createLecturerTest(@RequestBody LecturerTestCreationRequestDTO request) {
+        TestDTO createdTest = testService.createLecturerTest(request);
+        return new ResponseEntity<>(createdTest, HttpStatus.CREATED);
+    }
 }

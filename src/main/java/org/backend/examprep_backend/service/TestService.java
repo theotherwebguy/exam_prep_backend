@@ -18,6 +18,9 @@ public class TestService {
     private TestRepository testRepository;
 
     @Autowired
+    private ClassRepository classRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -251,6 +254,63 @@ public class TestService {
 
         return reviewDTOs;
     }
+
+    @Transactional
+    public TestDTO createLecturerTest(LecturerTestCreationRequestDTO request) {
+        Classes classAssigned = classRepository.findById(request.getClassId())
+                .orElseThrow(() -> new RuntimeException("Class not found"));
+
+        Test test = new Test();
+        test.setName(request.getTestName());
+        test.setDueDate(request.getDueDate());
+        test.setDuration(request.getDuration());
+        test.setInstruction(request.getInstruction());
+        test.setTotalGrade(request.getTotalGrade());
+        test.setClassAssigned(classAssigned);
+
+        List<TestQuestion> testQuestions = new ArrayList<>();
+        int totalQuestionCount = 0;
+
+        for (Map.Entry<Long, Integer> entry : request.getTopicQuestionCount().entrySet()) {
+            Long topicId = entry.getKey();
+            Integer questionCount = entry.getValue();
+
+            Topic topic = topicRepository.findById(topicId)
+                    .orElseThrow(() -> new RuntimeException("Topic not found"));
+
+            List<Question> questions = questionRepository.findByTopic(topic)
+                    .stream()
+                    .filter(Question::isModerated)
+                    .limit(questionCount)
+                    .collect(Collectors.toList());
+
+            for (Question question : questions) {
+                testQuestions.add(createTestQuestion(test, question));
+            }
+
+            totalQuestionCount += questions.size();
+        }
+
+        test.setQuestionCount(totalQuestionCount);
+        test.getTestQuestions().addAll(testQuestions);
+        testRepository.save(test);
+
+        return mapToTestDTO(test);
+    }
+
+
+    private TestDTO mapToTestDTO(Test test) {
+        TestDTO testDTO = new TestDTO();
+        testDTO.setTestId(test.getId());
+        testDTO.setTestName(test.getName());
+        testDTO.setDueDate(test.getDueDate());
+        testDTO.setDuration(test.getDuration());
+        testDTO.setInstruction(test.getInstruction());
+        testDTO.setTotalGrade(test.getTotalGrade());
+        return testDTO;
+    }
+
+
 }
 
 
