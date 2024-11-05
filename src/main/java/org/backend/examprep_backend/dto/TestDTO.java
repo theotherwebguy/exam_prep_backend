@@ -9,7 +9,6 @@ public class TestDTO {
     private Long testId;
     private String testName;
     private List<DomainDTO> domains;
-
     // getters and setters
 }
 

@@ -152,6 +152,7 @@ public class TestService {
         testDTO.setTestId(test.getId());
         testDTO.setTestName(test.getName());
         testDTO.setDomains(domainDTOList);
+        System.out.println("Test ID in DTO: " + testDTO.getTestId()); // Debug log
         return testDTO;
     }
 
