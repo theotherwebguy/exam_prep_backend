@@ -34,6 +34,5 @@ public class Answer {
         return isCorrect;
     }
 
-    private String answers;
 
 }

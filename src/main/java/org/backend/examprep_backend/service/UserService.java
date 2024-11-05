@@ -31,7 +31,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final IndependentTestService independentTestService;
 
     @Autowired
     private ClassRepository classRepository;
