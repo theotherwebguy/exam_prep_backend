@@ -87,6 +87,7 @@ public class QuestionService {
         return questionRepository.findByTopic_TopicId(topicId); // Assuming you have a repository method for this
     }
 
+    @Transactional
     public List<QuestionDTO> getUnmoderatedQuestionsByCourseId(Long courseId) {
         List<Question> questions = questionRepository.findUnmoderatedQuestionsByCourseId(courseId);
         return questions.stream()
@@ -100,6 +101,12 @@ public class QuestionService {
         dto.setQuestionId(question.getQuestionId());
         dto.setQuestionText(question.getQuestionText());
         dto.setTopicId(question.getTopic().getTopicId());
+
+        // Assuming question -> topic -> domain -> course relationship
+        Long courseId = question.getTopic().getDomain().getCourse().getCourseId();
+        dto.setCourseId(courseId); // Set the courseId in the DTO
+
+
         dto.setQuestionType(question.getQuestionType());
         dto.setInstruction(question.getInstruction());
         dto.setPdfFileUrl(question.getPdfFileUrl());
@@ -107,6 +114,7 @@ public class QuestionService {
         dto.setAnswers(question.getAnswers().stream()
                 .map(answer -> {
                     AnswerDTO answerDTO = new AnswerDTO();
+                    answerDTO.setAnswerId(answer.getAnswerId());
                     answerDTO.setAnswerText(answer.getAnswerText());
                     answerDTO.setAnswerDescription(answer.getAnswerDescription());
                     answerDTO.setIsCorrect(answer.isCorrect());

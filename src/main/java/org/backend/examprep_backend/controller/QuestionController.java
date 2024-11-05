@@ -3,6 +3,7 @@ package org.backend.examprep_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.backend.examprep_backend.dto.AnswerDTO;
 import org.backend.examprep_backend.dto.QuestionDTO;
+import org.backend.examprep_backend.model.Domain;
 import org.backend.examprep_backend.model.Question;
 import org.backend.examprep_backend.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,8 +64,17 @@ public class QuestionController {
 
     private QuestionDTO convertToDTO(Question question) {
         QuestionDTO dto = new QuestionDTO();
+        dto.setQuestionId(question.getQuestionId());
         dto.setQuestionText(question.getQuestionText());
         dto.setTopicId(question.getTopic().getTopicId());
+        dto.setTopicName(question.getTopic().getTopicName());  // Set topic name
+
+        // Assuming question -> topic -> domain -> course relationship
+        Domain domain = question.getTopic().getDomain();
+        dto.setDomainId(domain.getDomainId());                 // Set domain ID
+        dto.setDomainName(domain.getDomainName());             // Set domain name
+        dto.setCourseId(domain.getCourse().getCourseId());     // Set course ID
+
         dto.setQuestionType(question.getQuestionType());
         dto.setInstruction(question.getInstruction());
 //        dto.setPdfFileUrl(question.getPdfFileUrl()); // Add this if you modify QuestionDTO to include i
@@ -72,6 +82,7 @@ public class QuestionController {
         dto.setAnswers(question.getAnswers().stream()
                 .map(answer -> {
                     AnswerDTO answerDTO = new AnswerDTO();
+                    answerDTO.setAnswerId(answer.getAnswerId());
                     answerDTO.setAnswerText(answer.getAnswerText());
                     answerDTO.setAnswerDescription(answer.getAnswerDescription());
                     answerDTO.setIsCorrect(answer.isCorrect());

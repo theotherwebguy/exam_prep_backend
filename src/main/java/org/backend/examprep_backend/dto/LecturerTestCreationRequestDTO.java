@@ -1,22 +1,17 @@
+// LecturerTestCreationRequestDTO.java
 package org.backend.examprep_backend.dto;
 
 import lombok.Data;
-
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
+import java.util.Map;
 
 @Data
-public class TestDTO {
-    private Long testId;
+public class LecturerTestCreationRequestDTO {
     private String testName;
-    private List<DomainDTO> domains;
-
-    // Additional fields for lecturer-created tests
     private String instruction;
     private Integer totalGrade;
     private LocalDateTime dueDate;
     private Integer duration; // Duration in minutes
-
-    // getters and setters
+    private Long classId; // Links test to a class
+    private Map<Long, Integer> topicQuestionCount; // Key: topicId, Value: question count for each topic
 }

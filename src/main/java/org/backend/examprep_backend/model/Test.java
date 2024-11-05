@@ -1,32 +1,41 @@
 package org.backend.examprep_backend.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 @Entity
-@Table(name = "test")
 public class Test {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long testsId;
+    private Long id;
 
-    private String testName;
-    private Integer totalGrade;
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false) // Ensure this column cannot be null
     private Integer questionCount;
-    private String instructions;
-    private Date dueDate;
-    private String testDuration;
 
-    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Question> questions;
+    private LocalDateTime dueDate;
 
-    // Add the class relationship
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "class_id", nullable = false) // Foreign key
-    private Classes classes; // Link to Classes entity
+    private Integer duration; // Duration in minutes
+
+    @Column(columnDefinition = "text")
+    private String instruction;
+
+    private Integer totalGrade;
+
+    @ManyToOne
+    @JoinColumn(name = "class_id", nullable = true)
+    private Classes classAssigned;
+
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
+    private List<TestQuestion> testQuestions = new ArrayList<>();
+
+    // getters and setters
 }
