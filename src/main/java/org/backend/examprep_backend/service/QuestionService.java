@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -149,23 +150,38 @@ public class QuestionService {
             question.setPdfFileUrl(pdfFilePath);
         }
 
-        // Update answers: Clear existing answers and add the new ones
-        question.getAnswers().clear();  // Clear the existing list without replacing it
-        List<Answer> newAnswers = questionDTO.getAnswers().stream()
+        // Map existing answers by their IDs for easy lookup
+        Map<Long, Answer> existingAnswersMap = question.getAnswers().stream()
+                .collect(Collectors.toMap(Answer::getAnswerId, answer -> answer));
+
+        // Update or add answers based on questionDTO
+        List<Answer> updatedAnswers = questionDTO.getAnswers().stream()
                 .map(answerDTO -> {
-                    Answer answer = new Answer();
-                    answer.setAnswerText(answerDTO.getAnswerText());
-                    answer.setAnswerDescription(answerDTO.getAnswerDescription());
-                    answer.setCorrect(answerDTO.getIsCorrect());
-                    answer.setQuestion(question);
+                    Answer answer;
+                    if (answerDTO.getAnswerId() != null && existingAnswersMap.containsKey(answerDTO.getAnswerId())) {
+                        // Update existing answer
+                        answer = existingAnswersMap.get(answerDTO.getAnswerId());
+                        answer.setAnswerText(answerDTO.getAnswerText());
+                        answer.setAnswerDescription(answerDTO.getAnswerDescription());
+                        answer.setCorrect(answerDTO.getIsCorrect());
+                    } else {
+                        // Create new answer
+                        answer = new Answer();
+                        answer.setAnswerText(answerDTO.getAnswerText());
+                        answer.setAnswerDescription(answerDTO.getAnswerDescription());
+                        answer.setCorrect(answerDTO.getIsCorrect());
+                        answer.setQuestion(question);
+                    }
                     return answer;
                 }).collect(Collectors.toList());
 
-        question.getAnswers().addAll(newAnswers); // Add all new answers to the existing list
+        // Set the updated answers list
+        question.setAnswers(updatedAnswers);
 
         // Save the updated question
         questionRepository.save(question);
     }
+
 
     public Question getQuestionById(Long questionId) {
         return questionRepository.findById(questionId)
