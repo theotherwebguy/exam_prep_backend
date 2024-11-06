@@ -44,7 +44,7 @@ public class TempStudentService {
     // Register a temporary student with a specific class
     @Transactional
     public TempoStudent registerTempStudent(TempStudentDTO tempStudentDto) {
-        // Access user data directly from TempStudentDTO
+        // Check if email already exists in users or temporary students
         if (userRepository.findByEmail(tempStudentDto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("User with this email already exists in the system.");
         }
@@ -52,6 +52,7 @@ public class TempStudentService {
             throw new IllegalArgumentException("A temporary student with this email already exists.");
         }
 
+        // Retrieve and set class for the temporary student
         Classes studentClass = classRepository.findById(tempStudentDto.getClassId())
                 .orElseThrow(() -> new IllegalArgumentException("Class not found with ID: " + tempStudentDto.getClassId()));
 
@@ -63,7 +64,9 @@ public class TempStudentService {
         tempStudent.setFullNames(tempStudentDto.getFullNames());
         tempStudent.setSurname(tempStudentDto.getSurname());
         tempStudent.setContactNumber(tempStudentDto.getContactNumber());
+        tempStudent.setApproved(tempStudentDto.getIsApproved());
 
+        // Retrieve and assign the role of "STUDENT"
         Role studentRole = roleRepository.findByName("STUDENT")
                 .orElseThrow(() -> new IllegalArgumentException("Role 'STUDENT' not found"));
         tempStudent.setRole(studentRole);
@@ -91,13 +94,16 @@ public class TempStudentService {
             return ResponseEntity.ok("Approval denied for temporary student with ID " + tempStudentId + ".");
         }
 
+        // Transfer data to a new Users entity
         Users user = createUserFromTempStudent(tempStudent);
         userRepository.save(user);
         logger.info("User saved successfully with ID: {}", user.getId());
 
+        // Remove the temporary student entry
         tempStudentRepository.delete(tempStudent);
         logger.info("Deleted TempStudent with ID: {}", tempStudentId);
 
+        // Convert the Users entity to a UserDto and return
         UserDto userDto = mapUserToUserDto(user);
         logger.info("Returning response DTO: {}", userDto);
         return ResponseEntity.ok(userDto);
@@ -113,6 +119,7 @@ public class TempStudentService {
         user.setContactNumber(tempStudent.getContactNumber());
         user.setRole(tempStudent.getRole());
 
+        // Set class association for the new user
         Classes studentClass = classRepository.findById(tempStudent.getClassId())
                 .orElseThrow(() -> new IllegalArgumentException("Class not found with ID: " + tempStudent.getClassId()));
         user.getStudentClasses().add(studentClass);
@@ -126,7 +133,6 @@ public class TempStudentService {
         UserDto userDto = new UserDto();
         userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
-        userDto.setPassword(user.getPassword());
         userDto.setTitle(user.getTitle());
         userDto.setFullNames(user.getFullNames());
         userDto.setSurname(user.getSurname());
@@ -134,6 +140,7 @@ public class TempStudentService {
         userDto.setRole(user.getRole().getName());
         userDto.setProfileImage(user.getProfileImage());
 
+        // Map class IDs only, omitting sensitive data like password
         List<Long> classIds = user.getStudentClasses().stream()
                 .map(Classes::getClassesId)
                 .collect(Collectors.toList());
@@ -167,6 +174,7 @@ public class TempStudentService {
         tempStudent.setSurname(tempStudentDto.getSurname());
         tempStudent.setContactNumber(tempStudentDto.getContactNumber());
 
+        // Update class association
         Classes studentClass = classRepository.findById(tempStudentDto.getClassId())
                 .orElseThrow(() -> new IllegalArgumentException("Class not found with ID: " + tempStudentDto.getClassId()));
         tempStudent.setClassId(studentClass.getClassesId());
