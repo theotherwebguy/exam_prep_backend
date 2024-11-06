@@ -27,4 +27,5 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 
     Optional<Users> findStudentWithClassesCoursesAndLecturers(@Param("studentId") Long studentId);
 
+
 }
