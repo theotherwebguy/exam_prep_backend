@@ -25,13 +25,16 @@ public class Question {
     @Column(columnDefinition = "text")
     private String instruction; // Optional instruction for the question
 
+    // URL/path to the stored PDF file, rather than storing the file itself
     private String pdfFileUrl;
 
     @ManyToOne
     @JoinColumn(name = "topic_id", nullable = false)
     private Topic topic;
 
-    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    // Add this field for the relationship with answers
+
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Answer> answers; // This field holds the answers for the question
 
     @Column(nullable = false)

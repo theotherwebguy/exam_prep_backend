@@ -23,6 +23,8 @@ public class TestController {
         TestDTO createdTest = testService.createTest(request, studentId);
         return new ResponseEntity<>(createdTest, HttpStatus.CREATED);
     }
+
+
     // Start a test by fetching questions for the student
     @GetMapping("/{testId}/start")
     public ResponseEntity<TestAttemptDTO> startTest(@PathVariable Long testId,
@@ -53,5 +55,11 @@ public class TestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.emptyList());
         }
+    }
+
+    @PostMapping("/create-by-lecturer")
+    public ResponseEntity<TestDTO> createLecturerTest(@RequestBody LecturerTestCreationRequestDTO request) {
+        TestDTO createdTest = testService.createLecturerTest(request);
+        return new ResponseEntity<>(createdTest, HttpStatus.CREATED);
     }
 }
