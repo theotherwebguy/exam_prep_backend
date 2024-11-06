@@ -112,7 +112,6 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserById(@PathVariable Long userId) {
         try {
@@ -127,7 +126,6 @@ public class UserController {
                     .body("An unexpected error occurred. Please try again. Error: " + e.getMessage());
         }
     }
-
 
     // Update user with optional image update
     @PutMapping(value = "/update/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -221,6 +219,7 @@ public class UserController {
     }
 
     // Get user by email
+    @Transactional
     @GetMapping("/email/{email}")
     public ResponseEntity<?> getUser(@PathVariable String email) {
         return userService.findUserByEmail(email)
