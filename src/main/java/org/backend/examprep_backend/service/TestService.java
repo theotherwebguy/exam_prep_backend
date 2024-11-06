@@ -312,8 +312,4 @@ public class TestService {
         testDTO.setTotalGrade(test.getTotalGrade());
         return testDTO;
     }
-
-
 }
-
-
