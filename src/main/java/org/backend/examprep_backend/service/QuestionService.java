@@ -155,31 +155,26 @@ public class QuestionService {
         Map<Long, Answer> existingAnswersMap = question.getAnswers().stream()
                 .collect(Collectors.toMap(Answer::getAnswerId, answer -> answer));
 
-        // Prepare a list for updated answers
-        List<Answer> updatedAnswers = new ArrayList<>();
         // Update existing answers or add new ones
         for (AnswerDTO answerDTO : questionDTO.getAnswers()) {
-            Answer answer;
+
             if (answerDTO.getAnswerId() != null && existingAnswersMap.containsKey(answerDTO.getAnswerId())) {
                 // Update the existing answer
-                answer = existingAnswersMap.get(answerDTO.getAnswerId());
+
+                Answer answer = existingAnswersMap.get(answerDTO.getAnswerId());
                 answer.setAnswerText(answerDTO.getAnswerText());
                 answer.setAnswerDescription(answerDTO.getAnswerDescription());
                 answer.setCorrect(answerDTO.getIsCorrect());
             } else {
-                // Create a new answer
-                answer = new Answer();
-                answer.setAnswerText(answerDTO.getAnswerText());
-                answer.setAnswerDescription(answerDTO.getAnswerDescription());
-                answer.setCorrect(answerDTO.getIsCorrect());
-                answer.setQuestion(question);
+                // Create new answer if it doesn't exist
+                Answer newAnswer = new Answer();
+                newAnswer.setAnswerText(answerDTO.getAnswerText());
+                newAnswer.setAnswerDescription(answerDTO.getAnswerDescription());
+                newAnswer.setCorrect(answerDTO.getIsCorrect());
+                newAnswer.setQuestion(question);
+                question.getAnswers().add(newAnswer); // Add to question’s answer list
             }
-            updatedAnswers.add(answer);
         }
-
-        question.getAnswers().clear();       // Clear existing answers to avoid duplicates
-        question.getAnswers().addAll(updatedAnswers);
-
         // Save the updated question
         questionRepository.save(question);
     }
