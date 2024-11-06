@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -154,29 +155,30 @@ public class QuestionService {
         Map<Long, Answer> existingAnswersMap = question.getAnswers().stream()
                 .collect(Collectors.toMap(Answer::getAnswerId, answer -> answer));
 
-        // Update or add answers based on questionDTO
-        List<Answer> updatedAnswers = questionDTO.getAnswers().stream()
-                .map(answerDTO -> {
-                    Answer answer;
-                    if (answerDTO.getAnswerId() != null && existingAnswersMap.containsKey(answerDTO.getAnswerId())) {
-                        // Update existing answer
-                        answer = existingAnswersMap.get(answerDTO.getAnswerId());
-                        answer.setAnswerText(answerDTO.getAnswerText());
-                        answer.setAnswerDescription(answerDTO.getAnswerDescription());
-                        answer.setCorrect(answerDTO.getIsCorrect());
-                    } else {
-                        // Create new answer
-                        answer = new Answer();
-                        answer.setAnswerText(answerDTO.getAnswerText());
-                        answer.setAnswerDescription(answerDTO.getAnswerDescription());
-                        answer.setCorrect(answerDTO.getIsCorrect());
-                        answer.setQuestion(question);
-                    }
-                    return answer;
-                }).collect(Collectors.toList());
+        // Prepare a list for updated answers
+        List<Answer> updatedAnswers = new ArrayList<>();
+        // Update existing answers or add new ones
+        for (AnswerDTO answerDTO : questionDTO.getAnswers()) {
+            Answer answer;
+            if (answerDTO.getAnswerId() != null && existingAnswersMap.containsKey(answerDTO.getAnswerId())) {
+                // Update the existing answer
+                answer = existingAnswersMap.get(answerDTO.getAnswerId());
+                answer.setAnswerText(answerDTO.getAnswerText());
+                answer.setAnswerDescription(answerDTO.getAnswerDescription());
+                answer.setCorrect(answerDTO.getIsCorrect());
+            } else {
+                // Create a new answer
+                answer = new Answer();
+                answer.setAnswerText(answerDTO.getAnswerText());
+                answer.setAnswerDescription(answerDTO.getAnswerDescription());
+                answer.setCorrect(answerDTO.getIsCorrect());
+                answer.setQuestion(question);
+            }
+            updatedAnswers.add(answer);
+        }
 
-        // Set the updated answers list
-        question.setAnswers(updatedAnswers);
+        question.getAnswers().clear();       // Clear existing answers to avoid duplicates
+        question.getAnswers().addAll(updatedAnswers);
 
         // Save the updated question
         questionRepository.save(question);
