@@ -1,13 +1,16 @@
 package org.backend.examprep_backend.dto;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 
+@Data
 @Getter
 @Setter
-public class UserDetailDto {
+public class TempStudentDTO {
+
     private Long id;
     private String email;
     private String password;
@@ -17,8 +20,6 @@ public class UserDetailDto {
     private String contactNumber;
     private String role;
     private byte[] profileImage;
-    private List<Long> courseIds;
-    private List<Long> classIds;
-    private List<CourseDTO> courses;
-    private List<ClassDTO> classes;
+    private Boolean isApproved = false;
+    private Long classId;
 }

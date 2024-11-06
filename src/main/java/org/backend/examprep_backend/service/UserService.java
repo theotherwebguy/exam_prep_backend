@@ -81,39 +81,41 @@ public class UserService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Map Users to UserDto
-        UserDto userDto = new UserDto();
-        userDto.setId(user.getId());
-        userDto.setEmail(user.getEmail());
-        userDto.setTitle(user.getTitle());
-        userDto.setFullNames(user.getFullNames());
-        userDto.setSurname(user.getSurname());
-        userDto.setContactNumber(user.getContactNumber());
-        userDto.setProfileImage(user.getProfileImage());
+        UserDetailDto userDetailDto = new UserDetailDto();
+        userDetailDto.setId(user.getId());
+        userDetailDto.setEmail(user.getEmail());
+        userDetailDto.setPassword(user.getPassword()); // Set as null or omit for security reasons
+        userDetailDto.setTitle(user.getTitle());
+        userDetailDto.setFullNames(user.getFullNames());
+        userDetailDto.setSurname(user.getSurname());
+        userDetailDto.setContactNumber(user.getContactNumber());
 
         if (user.getRole() != null) {
-            userDto.setRole(user.getRole().getName());
+            userDetailDto.setRole(user.getRole().getName());
         }
 
-        // Set profile image only if it exists
         if (user.getProfileImage() != null) {
-            userDto.setProfileImage(user.getProfileImage());
+            userDetailDto.setProfileImage(user.getProfileImage());
         }
 
-        // Fetch courses
-        List<CourseDTO> courses = getCoursesByUserId(userId); //independentTestService.getCoursesByUserId(userId)
+        userDetailDto.setCourses(getCoursesByUserId(userId));
+        userDetailDto.setClasses(getClassesByUserId(userId));
 
-        // Fetch classes
-        List<ClassDTO> classes = getClassesByUserId(userId);
+        // Populate courseIds and classIds if needed
+        // Populate courseIds by mapping each course to its ID
+        userDetailDto.setCourseIds(user.getCourses().stream()
+                .map(Course::getCourseId)
+                .collect(Collectors.toList()));
 
-        // Create UserDetailDto
-        UserDetailDto userDetailDto = new UserDetailDto();
-        userDetailDto.setUser(userDto);
-        userDetailDto.setCourses(courses);
-        userDetailDto.setClasses(classes);
+// Populate classIds by mapping each class to its ID
+        userDetailDto.setClassIds(user.getStudentClasses().stream()
+                .map(Classes::getClassesId)
+                .collect(Collectors.toList()));
+
 
         return userDetailDto;
     }
+
 
     // GET all users
     @Transactional(readOnly = true)
@@ -141,6 +143,14 @@ public class UserService {
                     .map(Course::getCourseId)
                     .collect(Collectors.toList());
             userDto.setCourseIds(courseIds);
+        }
+
+        List<Long> classIds = new ArrayList<>();
+        for (Classes classes : user.getStudentClasses()) {
+            Long classesId = classes.getClassesId();
+            classIds.add(classesId);
+
+            userDto.setClassIds(classIds);
         }
 
         return userDto;
