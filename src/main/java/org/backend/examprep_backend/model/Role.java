@@ -12,7 +12,7 @@ import lombok.*;
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // Primary key
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String name; // Role name (e.g., Admin, Student, etc.)
