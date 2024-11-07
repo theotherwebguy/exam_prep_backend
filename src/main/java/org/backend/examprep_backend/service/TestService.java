@@ -6,6 +6,7 @@ import org.backend.examprep_backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Collections;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,13 +18,7 @@ public class TestService {
     private TestRepository testRepository;
 
     @Autowired
-    private ClassRepository classRepository;
-
-    @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private TestAttemptRepository testAttemptRepository;
 
     @Autowired
     private QuestionRepository questionRepository;
@@ -34,14 +29,15 @@ public class TestService {
     @Autowired
     private TopicRepository topicRepository;
 
-    @Autowired
-    private TestAttemptAnswerRepository testAttemptAnswerRepository;
 
     @Transactional
     public TestDTO createTest(TestCreationRequestDTO request, Long studentId) {
         // Create a new Test entity
+        Users student = userRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
         Test test = new Test();
         test.setName(request.getTestName());
+        test.setStudent(student); // Associate the student with the test
 
         // List to hold domains for the response DTO
         List<DomainDTO> domainDTOList = new ArrayList<>();
@@ -108,16 +104,63 @@ public class TestService {
 
         return testQuestion;
     }
+
+    @Transactional
+    public TestDTO startWriting(Long testId, Long studentId) {
+        // Step 1: Retrieve the test by its ID
+        Test test = testRepository.findById(testId)
+                .orElseThrow(() -> new RuntimeException("Test not found"));
+
+        // Verify if the student is eligible to take this test (placeholder check)
+        if (!checkStudentEligibility(test, studentId)) {
+            throw new RuntimeException("Student is not eligible to take this test.");
+        }
+
+        // Step 2: Retrieve all test questions and prepare them for response
+        // Step 3: Map questions and their answers into QuestionDTO objects
+        List<QuestionDTO> questionDTOList = test.getTestQuestions().stream()
+                .map(testQuestion -> {
+                    Question question = testQuestion.getQuestion();
+                    QuestionDTO questionDTO = mapQuestionToDTO(question); // Map question details
+                    questionDTO.setAnswers(question.getAnswers().stream()
+                            .map(answer -> new AnswerDTO(answer.getAnswerId(), answer.getAnswerText(), answer.isCorrect(), answer.getAnswerDescription()))
+                            .collect(Collectors.toList())); // Add possible answers
+                    return questionDTO;
+                })
+                .collect(Collectors.toList());
+        // Step 4: Build TestDTO with test details and list of questions
+        TestDTO testDTO = new TestDTO();
+        testDTO.setTestId(test.getId());
+        testDTO.setTestName(test.getName());
+        testDTO.setInstruction(test.getInstruction());
+        testDTO.setDueDate(test.getDueDate());
+        testDTO.setDuration(test.getDuration());
+        testDTO.setQuestionCount(test.getQuestionCount());
+        testDTO.setQuestions(questionDTOList); // Add populated questions
+
+        return testDTO;
+    }
+
+    // Helper method to check if the student is eligible to take the test
+    private boolean checkStudentEligibility(Test test, Long studentId) {
+        // Example check: Ensure the student is linked to the test's course or lecturer
+        // For simplicity, returning true (no check implemented here)
+        return true;
+    }
+
+
+
+
+
     // Helper method to create DomainDTO from a Topic and its Questions
     private DomainDTO createDomainDTO(Topic topic, List<Question> questions) {
         TopicDTO topicDTO = new TopicDTO();
         topicDTO.setTopicId(topic.getTopicId());
         topicDTO.setTopicName(topic.getTopicName());
 
-        List<QuestionDTO> questionDTOs = new ArrayList<>();
-        for (Question question : questions) {
-            questionDTOs.add(mapQuestionToDTO(question));
-        }
+        List<QuestionDTO> questionDTOs = questions.stream()
+                .map(this::mapQuestionToDTO)
+                .collect(Collectors.toList());
         topicDTO.setQuestions(questionDTOs);
 
         DomainDTO domainDTO = new DomainDTO();
@@ -140,10 +183,9 @@ public class TestService {
         questionDTO.setInstruction(question.getInstruction());
         questionDTO.setPdfFileUrl(question.getPdfFileUrl());
 
-        List<AnswerDTO> answerDTOs = new ArrayList<>();
-        for (Answer answer : question.getAnswers()) {
-            answerDTOs.add(new AnswerDTO(answer.getAnswerId(), answer.getAnswerText(), answer.isCorrect(), answer.getAnswerDescription()));
-        }
+        List<AnswerDTO> answerDTOs = question.getAnswers().stream()
+                .map(answer -> new AnswerDTO(answer.getAnswerId(), answer.getAnswerText(), answer.isCorrect(), answer.getAnswerDescription()))
+                .collect(Collectors.toList());
         questionDTO.setAnswers(answerDTOs);
 
         return questionDTO;
@@ -153,163 +195,24 @@ public class TestService {
         TestDTO testDTO = new TestDTO();
         testDTO.setTestId(test.getId());
         testDTO.setTestName(test.getName());
+        testDTO.setDuration(test.getDuration());
+        testDTO.setDueDate(test.getDueDate());
+        testDTO.setInstruction(test.getInstruction());
+        testDTO.setTotalGrade(test.getTotalGrade());
         testDTO.setDomains(domainDTOList);
         System.out.println("Test ID in DTO: " + testDTO.getTestId()); // Debug log
-        return testDTO;
-    }
 
-    @Transactional
-    public TestAttemptDTO startTest(Long testId, Long studentId) {
-        Test test = testRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Test not found"));
-        Users student = userRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-
-        TestAttempt testAttempt = new TestAttempt();
-        testAttempt.setTest(test);
-        testAttempt.setStudent(student);
-        testAttempt.setCompleted(false);
-        testAttemptRepository.save(testAttempt);
-
-        List<QuestionDTO> questionDTOs = test.getTestQuestions().stream()
+        // Map all test questions to a flat list if questions field is separate
+        List<QuestionDTO> questionDTOList = test.getTestQuestions().stream()
                 .map(testQuestion -> mapQuestionToDTO(testQuestion.getQuestion()))
                 .collect(Collectors.toList());
 
-        TestAttemptDTO testAttemptDTO = new TestAttemptDTO();
-        testAttemptDTO.setTestId(test.getId());
-        testAttemptDTO.setTestName(test.getName());
-        testAttemptDTO.setQuestions(questionDTOs);
-
-        return testAttemptDTO;
-    }
-
-
-
-
-    @Transactional
-    public void submitAnswers(Long testAttemptId, List<TestAttemptAnswerDTO> answers) {
-        TestAttempt testAttempt = testAttemptRepository.findById(testAttemptId)
-                .orElseThrow(() -> new RuntimeException("Test attempt not found"));
-
-        int score = 0;
-
-        for (TestAttemptAnswerDTO answerDTO : answers) {
-            Question question = questionRepository.findById(answerDTO.getQuestionId())
-                    .orElseThrow(() -> new RuntimeException("Question not found"));
-
-            Answer selectedAnswer = answerRepository.findById(answerDTO.getSelectedAnswerId())
-                    .orElse(null); // could be null if unanswered
-
-            boolean isCorrect = selectedAnswer != null && selectedAnswer.isCorrect();
-
-            TestAttemptAnswer testAttemptAnswer = new TestAttemptAnswer();
-            testAttemptAnswer.setTestAttempt(testAttempt);
-            testAttemptAnswer.setQuestion(question);
-            testAttemptAnswer.setSelectedAnswer(selectedAnswer);
-            testAttemptAnswer.setIsCorrect(isCorrect);
-
-            if (isCorrect) score++;
-
-            testAttemptAnswerRepository.save(testAttemptAnswer);
-        }
-
-        testAttempt.setScore(score);
-        testAttempt.setCompleted(true);
-        testAttemptRepository.save(testAttempt);
-    }
-
-    @Transactional
-    public List<TestReviewDTO> reviewTest(Long testAttemptId) {
-        TestAttempt testAttempt = testAttemptRepository.findById(testAttemptId)
-                .orElseThrow(() -> new RuntimeException("Test attempt not found"));
-
-        List<TestReviewDTO> reviewDTOs = new ArrayList<>();
-
-        for (TestAttemptAnswer attemptAnswer : testAttempt.getAnswers()) {
-            Question question = attemptAnswer.getQuestion();
-            TestReviewDTO reviewDTO = new TestReviewDTO();
-            reviewDTO.setQuestionId(question.getQuestionId());
-            reviewDTO.setQuestionText(question.getQuestionText());
-
-            // Retrieve all answers for the question
-            List<AnswerDTO> answerDTOs = question.getAnswers().stream().map(answer -> {
-                AnswerDTO answerDTO = new AnswerDTO();
-                answerDTO.setAnswerId(answer.getAnswerId());
-                answerDTO.setAnswerText(answer.getAnswerText());
-                answerDTO.setIsCorrect(answer.isCorrect());
-                return answerDTO;
-            }).collect(Collectors.toList());
-
-            reviewDTO.setAnswers(answerDTOs);
-
-            // Set the selected answer and correct answer
-            reviewDTO.setSelectedAnswerId(attemptAnswer.getSelectedAnswer() != null ?
-                    attemptAnswer.getSelectedAnswer().getAnswerId() : null);
-            reviewDTO.setCorrectAnswerId(question.getAnswers().stream()
-                    .filter(Answer::isCorrect)
-                    .findFirst()
-                    .map(Answer::getAnswerId)
-                    .orElse(null));
-
-            reviewDTO.setCorrect(attemptAnswer.getIsCorrect());
-            reviewDTOs.add(reviewDTO);
-        }
-
-        return reviewDTOs;
-    }
-
-    @Transactional
-    public TestDTO createLecturerTest(LecturerTestCreationRequestDTO request) {
-        Classes classAssigned = classRepository.findById(request.getClassId())
-                .orElseThrow(() -> new RuntimeException("Class not found"));
-
-        Test test = new Test();
-        test.setName(request.getTestName());
-        test.setDueDate(request.getDueDate());
-        test.setDuration(request.getDuration());
-        test.setInstruction(request.getInstruction());
-        test.setTotalGrade(request.getTotalGrade());
-        test.setClassAssigned(classAssigned);
-
-        List<TestQuestion> testQuestions = new ArrayList<>();
-        int totalQuestionCount = 0;
-
-        for (Map.Entry<Long, Integer> entry : request.getTopicQuestionCount().entrySet()) {
-            Long topicId = entry.getKey();
-            Integer questionCount = entry.getValue();
-
-            Topic topic = topicRepository.findById(topicId)
-                    .orElseThrow(() -> new RuntimeException("Topic not found"));
-
-            List<Question> questions = questionRepository.findByTopic(topic)
-                    .stream()
-                    .filter(Question::isModerated)
-                    .limit(questionCount)
-                    .collect(Collectors.toList());
-
-            for (Question question : questions) {
-                testQuestions.add(createTestQuestion(test, question));
-            }
-
-            totalQuestionCount += questions.size();
-        }
-
-        test.setQuestionCount(totalQuestionCount);
-        test.getTestQuestions().addAll(testQuestions);
-        testRepository.save(test);
-
-        return mapToTestDTO(test);
-    }
-
-
-    private TestDTO mapToTestDTO(Test test) {
-        TestDTO testDTO = new TestDTO();
-        testDTO.setTestId(test.getId());
-        testDTO.setTestName(test.getName());
-        testDTO.setDueDate(test.getDueDate());
-        testDTO.setDuration(test.getDuration());
-        testDTO.setInstruction(test.getInstruction());
-        testDTO.setTotalGrade(test.getTotalGrade());
+        testDTO.setQuestions(questionDTOList); // Ensure questions are set
         return testDTO;
     }
+
+
+
 }
+
+

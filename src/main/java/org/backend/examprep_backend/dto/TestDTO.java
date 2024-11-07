@@ -11,6 +11,8 @@ public class TestDTO {
     private Long testId;
     private String testName;
     private List<DomainDTO> domains;
+    private Integer questionCount;
+    private List<QuestionDTO> questions;
 
     // Additional fields for lecturer-created tests
     private String instruction;

@@ -30,9 +30,14 @@ public class Test {
 
     private Integer totalGrade;
 
+    // Add the student field
     @ManyToOne
-    @JoinColumn(name = "class_id", nullable = true)
-    private Classes classAssigned;
+    @JoinColumn(name = "student_id", nullable = true)
+    private Users student;
+
+//    @ManyToOne
+//    @JoinColumn(name = "class_id", nullable = true)
+//    private Classes classAssigned;
 
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
     private List<TestQuestion> testQuestions = new ArrayList<>();
