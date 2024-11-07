@@ -183,9 +183,6 @@ public class TestService {
         return testAttemptDTO;
     }
 
-
-
-
     @Transactional
     public void submitAnswers(Long testAttemptId, List<TestAttemptAnswerDTO> answers) {
         TestAttempt testAttempt = testAttemptRepository.findById(testAttemptId)
@@ -301,7 +298,6 @@ public class TestService {
         return mapToTestDTO(test);
     }
 
-
     private TestDTO mapToTestDTO(Test test) {
         TestDTO testDTO = new TestDTO();
         testDTO.setTestId(test.getId());
@@ -312,8 +308,6 @@ public class TestService {
         testDTO.setTotalGrade(test.getTotalGrade());
         return testDTO;
     }
-
-
 }
 
 

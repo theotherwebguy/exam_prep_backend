@@ -179,7 +179,6 @@ public class QuestionService {
         questionRepository.save(question);
     }
 
-
     public Question getQuestionById(Long questionId) {
         return questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
