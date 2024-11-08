@@ -26,7 +26,7 @@ public class TestController {
 
     // Endpoint to start writing a test
     @GetMapping("/{testId}/start")
-    public ResponseEntity<TestDTO> startWritingTest(
+    public ResponseEntity<?> startWritingTest(
             @PathVariable Long testId,
             @RequestParam Long studentId) {
 
@@ -36,6 +36,20 @@ public class TestController {
         // Return the response entity with the test data
         return ResponseEntity.ok(testDTO);
     }
+
+    // Endpoint to submit a test after the student completes it
+    @PostMapping("/{testId}/submit/{studentId}")
+    public ResponseEntity<String> submitTest(@PathVariable Long testId,
+                                             @PathVariable Long studentId,
+                                             @RequestBody List<AnswerSubmissionDTO> answerSubmissions) {
+        try {
+            testService.submitTest(testId, studentId, answerSubmissions);  // Call to the service method to process the submission
+            return ResponseEntity.ok("Test submitted successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to submit test: " + e.getMessage());
+        }
+    }
+
 
     // Start a test by fetching questions for the student
 //    @GetMapping("/{testId}/start")
