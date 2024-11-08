@@ -50,6 +50,20 @@ public class TestController {
         }
     }
 
+    // Endpoint for lecturer to create test
+    @PostMapping("/api/tests/create-by-lecturer/{lecturerId}")
+    public ResponseEntity<?> lecturerCreateTest(
+            @RequestBody LecturerTestCreationRequestDTO request,
+            @PathVariable Long lecturerId) {
+
+        try {
+            TestDTO createdTest = testService.lecturerCreateTest(request, lecturerId);
+            return new ResponseEntity<>(createdTest, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
     // Start a test by fetching questions for the student
 //    @GetMapping("/{testId}/start")

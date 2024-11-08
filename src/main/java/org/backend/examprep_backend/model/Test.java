@@ -34,9 +34,9 @@ public class Test {
     private Users student;
 
     // Assuming you will eventually use the classAssigned field
-//    @ManyToOne
-//    @JoinColumn(name = "class_id", nullable = true)
-//    private Classes classAssigned;
+    @ManyToOne
+    @JoinColumn(name = "class_id", nullable = true)
+    private Classes classAssigned;
 
     @OneToMany(mappedBy = "test", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<TestQuestion> testQuestions = new ArrayList<>();
