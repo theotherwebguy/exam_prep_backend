@@ -212,6 +212,17 @@ public class ClassService {
         // Finally, delete the class
         classRepository.delete(classToDelete);
     }
+    // New function: retrieves all classes without detailed student information
+    @Transactional
+    public List<ClassResponseDTO> getAllClasses() {
+        // Fetch all class entities from the repository
+        List<Classes> allClasses = classRepository.findAll();
+
+        // Map each class to a ClassResponseDTO and return the list
+        return allClasses.stream()
+                .map(this::mapToClassResponseDTO)
+                .toList();
+    }
 
     @Transactional
     public LecturerClassCourseDTO getCourseDetailsForLecturer(Long lecturerId) {

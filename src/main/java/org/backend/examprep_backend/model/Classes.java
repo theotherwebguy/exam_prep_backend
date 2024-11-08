@@ -1,13 +1,10 @@
 package org.backend.examprep_backend.model;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.catalina.User;
-
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -26,19 +23,16 @@ public class Classes {
     private LocalDate startDate;
     private LocalDate endDate;
 
-
-    @ManyToOne(fetch = FetchType.EAGER) // Adjust fetch type if needed
-    @JoinColumn(name = "course_id", nullable = false) // Foreign key
-    private Course course; // Add this field
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
 
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
     private Users lecturer;
 
-    @Column(nullable = false)
     @ManyToMany(mappedBy = "studentClasses")
     private Set<Users> students = new HashSet<>();
-
 
     // Utility method to remove a student
     public void removeStudent(Users student) {

@@ -15,9 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -151,30 +149,20 @@ public class QuestionService {
             question.setPdfFileUrl(pdfFilePath);
         }
 
-        // Map existing answers by their IDs for easy lookup
-        Map<Long, Answer> existingAnswersMap = question.getAnswers().stream()
-                .collect(Collectors.toMap(Answer::getAnswerId, answer -> answer));
+        // Update answers: Clear existing answers and add the new ones
+        question.getAnswers().clear();  // Clear the existing list without replacing it
+        List<Answer> newAnswers = questionDTO.getAnswers().stream()
+                .map(answerDTO -> {
+                    Answer answer = new Answer();
+                    answer.setAnswerText(answerDTO.getAnswerText());
+                    answer.setAnswerDescription(answerDTO.getAnswerDescription());
+                    answer.setCorrect(answerDTO.getIsCorrect());
+                    answer.setQuestion(question);
+                    return answer;
+                }).collect(Collectors.toList());
 
-        // Update existing answers or add new ones
-        for (AnswerDTO answerDTO : questionDTO.getAnswers()) {
+        question.getAnswers().addAll(newAnswers); // Add all new answers to the existing list
 
-            if (answerDTO.getAnswerId() != null && existingAnswersMap.containsKey(answerDTO.getAnswerId())) {
-                // Update the existing answer
-
-                Answer answer = existingAnswersMap.get(answerDTO.getAnswerId());
-                answer.setAnswerText(answerDTO.getAnswerText());
-                answer.setAnswerDescription(answerDTO.getAnswerDescription());
-                answer.setCorrect(answerDTO.getIsCorrect());
-            } else {
-                // Create new answer if it doesn't exist
-                Answer newAnswer = new Answer();
-                newAnswer.setAnswerText(answerDTO.getAnswerText());
-                newAnswer.setAnswerDescription(answerDTO.getAnswerDescription());
-                newAnswer.setCorrect(answerDTO.getIsCorrect());
-                newAnswer.setQuestion(question);
-                question.getAnswers().add(newAnswer); // Add to question’s answer list
-            }
-        }
         // Save the updated question
         questionRepository.save(question);
     }

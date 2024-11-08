@@ -2,10 +2,8 @@ package org.backend.examprep_backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -30,12 +28,22 @@ public class Test {
 
     private Integer totalGrade;
 
+    // Add the student field
     @ManyToOne
-    @JoinColumn(name = "class_id", nullable = true)
-    private Classes classAssigned;
+    @JoinColumn(name = "student_id", nullable = true)
+    private Users student;
 
-    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
+    // Assuming you will eventually use the classAssigned field
+//    @ManyToOne
+//    @JoinColumn(name = "class_id", nullable = true)
+//    private Classes classAssigned;
+
+    @OneToMany(mappedBy = "test", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<TestQuestion> testQuestions = new ArrayList<>();
 
-    // getters and setters
+    // Ensure proper initialization of test questions and question count
+    public void setTestQuestions(List<TestQuestion> testQuestions) {
+        this.testQuestions = testQuestions;
+        this.questionCount = testQuestions.size();
+    }
 }

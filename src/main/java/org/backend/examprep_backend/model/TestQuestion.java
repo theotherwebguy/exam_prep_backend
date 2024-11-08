@@ -10,9 +10,9 @@ public class TestQuestion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "test_attempt_id")
-    private TestAttempt testAttempt;
+//    @ManyToOne
+//    @JoinColumn(name = "test_attempt_id")
+//    private TestAttempt testAttempt;
 
     @ManyToOne
     @JoinColumn(name = "test_id", nullable = false)
@@ -24,7 +24,7 @@ public class TestQuestion {
 
     private Boolean isCorrect;
 
-    private Long selectedAnswerId;
+//    private Long selectedAnswerId;
 
     private Integer score;
 
