@@ -67,7 +67,7 @@ public class TempStudentService {
         tempStudent.setApproved(tempStudentDto.getIsApproved());
 
         // Retrieve and assign the role of "STUDENT"
-        Role studentRole = roleRepository.findByName("STUDENT")
+        Role studentRole = roleRepository.findByName("ENROLLSTUDENT")
                 .orElseThrow(() -> new IllegalArgumentException("Role 'STUDENT' not found"));
         tempStudent.setRole(studentRole);
 

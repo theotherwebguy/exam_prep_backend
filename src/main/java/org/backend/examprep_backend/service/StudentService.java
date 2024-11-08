@@ -32,7 +32,7 @@ public class StudentService {
         Users student = userRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
-        if (!student.getRole().getName().equalsIgnoreCase("Student")) {
+        if (!student.getRole().getName().equalsIgnoreCase("ENROLLSTUDENT")) {
             throw new InvalidRoleException("User is not a Student");
         }
 
