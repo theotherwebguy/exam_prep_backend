@@ -38,13 +38,14 @@ public class TestController {
             @PathVariable Long testAttemptId,
             @RequestBody List<TestAttemptAnswerDTO> answers) {
         try {
-            testService.submitAnswers(testAttemptId, answers);
-            return ResponseEntity.ok("Test submitted successfully");
+            testService.submitAnswers(testAttemptId, answers);  // Submit the answers via the service method
+            return ResponseEntity.ok("Test submitted successfully");  // Respond with success message
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)  // Handle any errors
                     .body("Error while submitting test: " + e.getMessage());
         }
     }
+
 
     @GetMapping("/{testAttemptId}/review")
     public ResponseEntity<List<TestReviewDTO>> reviewTest(@PathVariable Long testAttemptId) {

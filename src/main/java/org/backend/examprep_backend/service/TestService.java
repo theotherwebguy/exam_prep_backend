@@ -185,40 +185,49 @@ public class TestService {
 
     @Transactional
     public void submitAnswers(Long testAttemptId, List<TestAttemptAnswerDTO> answers) {
+        // Fetch the TestAttempt entity by its ID
         TestAttempt testAttempt = testAttemptRepository.findById(testAttemptId)
                 .orElseThrow(() -> new RuntimeException("Test attempt not found"));
 
-        int score = 0;
+        int score = 0;  // Initialize score to 0
 
+        // Loop through each answer provided by the frontend
         for (TestAttemptAnswerDTO answerDTO : answers) {
+            // Fetch the question entity by its ID
             Question question = questionRepository.findById(answerDTO.getQuestionId())
                     .orElseThrow(() -> new RuntimeException("Question not found"));
 
+            // Fetch the selected answer by its ID (could be null if unanswered)
             Answer selectedAnswer = answerRepository.findById(answerDTO.getSelectedAnswerId())
-                    .orElse(null); // could be null if unanswered
+                    .orElse(null);
 
+            // Determine if the selected answer is correct
             boolean isCorrect = selectedAnswer != null && selectedAnswer.isCorrect();
 
+            // Create a new TestAttemptAnswer entity to link the student's answer with the test attempt
             TestAttemptAnswer testAttemptAnswer = new TestAttemptAnswer();
-            testAttemptAnswer.setTestAttempt(testAttempt);
-            testAttemptAnswer.setQuestion(question);
-            testAttemptAnswer.setSelectedAnswer(selectedAnswer);
-            testAttemptAnswer.setIsCorrect(isCorrect);
+            testAttemptAnswer.setTestAttempt(testAttempt);  // Associate with the test attempt
+            testAttemptAnswer.setQuestion(question);  // Associate with the question
+            testAttemptAnswer.setSelectedAnswer(selectedAnswer);  // Store the selected answer
+            testAttemptAnswer.setIsCorrect(isCorrect);  // Set if the answer is correct
 
+            // If the answer is correct, increment the score
             if (isCorrect) score++;
 
+            // Save the test attempt answer to the database
             testAttemptAnswerRepository.save(testAttemptAnswer);
         }
-
+        // Once all answers are saved, update the test attempt with the final score
         testAttempt.setScore(score);
-        testAttempt.setCompleted(true);
-        testAttemptRepository.save(testAttempt);
+        testAttempt.setCompleted(true);  // Mark the test as completed
+        testAttemptRepository.save(testAttempt);  // Save the updated test attempt
     }
 
     @Transactional
     public List<TestReviewDTO> reviewTest(Long testAttemptId) {
         TestAttempt testAttempt = testAttemptRepository.findById(testAttemptId)
-                .orElseThrow(() -> new RuntimeException("Test attempt not found"));
+                .orElseThrow(() -> new RuntimeException("Test attempt not found with id: " + testAttemptId));
+
 
         List<TestReviewDTO> reviewDTOs = new ArrayList<>();
 
