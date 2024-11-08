@@ -1,11 +1,7 @@
 package org.backend.examprep_backend.service.unit;
 
-import org.backend.examprep_backend.dto.AnswerDTO;
 import org.backend.examprep_backend.dto.QuestionDTO;
-import org.backend.examprep_backend.model.Answer;
 import org.backend.examprep_backend.model.Question;
-import org.backend.examprep_backend.model.QuestionType;
-import org.backend.examprep_backend.model.Topic;
 import org.backend.examprep_backend.repository.QuestionRepository;
 import org.backend.examprep_backend.repository.TopicRepository;
 import org.backend.examprep_backend.service.QuestionService;
@@ -16,13 +12,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class QuestionServiceTest {
@@ -76,20 +70,20 @@ class QuestionServiceTest {
 //        // Assert
 //        verify(questionRepository, times(1)).save(any(Question.class));
 //    }
-//
-//    @Test
-//    void testSaveQuestionWithInvalidPdf_ThrowsException() {
-//        QuestionDTO questionDTO = new QuestionDTO();
-//        questionDTO.setQuestionText("Sample Question");
-//
-//        MockMultipartFile invalidFile = new MockMultipartFile(
-//                "file", "test.txt", "text/plain", "Invalid content".getBytes()
-//        );
-//
-//        assertThrows(IllegalArgumentException.class, () -> {
-//            questionService.saveQuestionWithPdf(questionDTO, invalidFile);
-//        });
-//    }
+
+    @Test
+    void testSaveQuestionWithInvalidPdf_ThrowsException() {
+        QuestionDTO questionDTO = new QuestionDTO();
+        questionDTO.setQuestionText("Sample Question");
+
+        MockMultipartFile invalidFile = new MockMultipartFile(
+                "file", "test.txt", "text/plain", "Invalid content".getBytes()
+        );
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            questionService.saveQuestionWithPdf(questionDTO, invalidFile);
+        });
+    }
 
     @Test
     void testGetQuestionsByTopicId() {
@@ -104,23 +98,23 @@ class QuestionServiceTest {
         verify(questionRepository, times(1)).findByTopic_TopicId(topicId);
     }
 
-//    @Test
-//    void testGetUnmoderatedQuestionsByCourseId() {
-//        Long courseId = 1L;
-//        List<Question> mockQuestions = new ArrayList<>();
-//        Question mockQuestion = new Question();
-//        mockQuestion.setQuestionId(1L);
-//        mockQuestion.setQuestionText("Unmoderated Question");
-//        mockQuestions.add(mockQuestion);
-//
-//        when(questionRepository.findUnmoderatedQuestionsByCourseId(courseId)).thenReturn(mockQuestions);
-//
-//        List<QuestionDTO> result = questionService.getUnmoderatedQuestionsByCourseId(courseId);
-//
-//        assertEquals(1, result.size());
-//        assertEquals("Unmoderated Question", result.get(0).getQuestionText());
-//        verify(questionRepository, times(1)).findUnmoderatedQuestionsByCourseId(courseId);
-//    }
+    @Test
+    void testGetUnmoderatedQuestionsByCourseId() {
+        Long courseId = 1L;
+        List<Question> mockQuestions = new ArrayList<>();
+        Question mockQuestion = new Question();
+        mockQuestion.setQuestionId(1L);
+        mockQuestion.setQuestionText("Unmoderated Question");
+        mockQuestions.add(mockQuestion);
+
+        when(questionRepository.findUnmoderatedQuestionsByCourseId(courseId)).thenReturn(mockQuestions);
+
+        List<QuestionDTO> result = questionService.getUnmoderatedQuestionsByCourseId(courseId);
+
+        assertEquals(1, result.size());
+        assertEquals("Unmoderated Question", result.get(0).getQuestionText());
+        verify(questionRepository, times(1)).findUnmoderatedQuestionsByCourseId(courseId);
+    }
 
 //    @Test
 //    void testUpdateQuestionWithPdf_Success() throws IOException {

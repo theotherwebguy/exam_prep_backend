@@ -1,9 +1,7 @@
 package org.backend.examprep_backend.service.unit;
 
-import org.backend.examprep_backend.ResourceNotFoundException;
 import org.backend.examprep_backend.dto.ClassDTO;
 import org.backend.examprep_backend.dto.CourseDTO;
-import org.backend.examprep_backend.dto.UserDetailDto;
 import org.backend.examprep_backend.dto.UserDto;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Course;
@@ -16,13 +14,15 @@ import org.backend.examprep_backend.repository.UserRepository;
 import org.backend.examprep_backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -184,16 +184,16 @@ class UserServiceTest {
         assertTrue(foundUser.isPresent());
     }
 
-//    @Test
-//    void authenticateUser_Success() {
-//        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-//        when(passwordEncoder.matches(eq("password"), eq(user.getEmail()))).thenReturn(true);
-//
-//        UserDto authenticatedUser = userService.authenticateUser("test@example.com", "password");
-//
-//        assertNotNull(authenticatedUser);
-//        assertEquals("test@example.com", authenticatedUser.getEmail());
-//    }
+    @Test
+    void authenticateUser_Success() {
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(eq("password"), eq(user.getEmail()))).thenReturn(true);
+
+        UserDto authenticatedUser = userService.authenticateUser("test@example.com", "password");
+
+        assertNotNull(authenticatedUser);
+        assertEquals("test@example.com", authenticatedUser.getEmail());
+    }
 
     @Test
     void authenticateUser_UserNotFound() {
@@ -218,21 +218,21 @@ class UserServiceTest {
         assertEquals("Invalid email or password.", exception.getMessage());
     }
 
-//    @Test
-//    void getClassesByUserId() {
-//        Classes clazz = new Classes();
-//        clazz.setClassesId(1L);
-//        clazz.setClassName("Class 1");
-//        clazz.setCourse(new Course());
-//        clazz.getCourse().setCourseId(1L);
-//        List<Classes> classes = Collections.singletonList(clazz);
-//        when(classRepository.findByLecturerId(1L)).thenReturn(classes);
-//
-//        List<ClassDTO> result = userService.getClassesByUserId(1L);
-//
-//        assertEquals(1, result.size());
-//        assertEquals("Class 1", result.get(0).getClassName());
-//    }
+    @Test
+    void getClassesByUserId() {
+        Classes clazz = new Classes();
+        clazz.setClassesId(1L);
+        clazz.setClassName("Class 1");
+        clazz.setCourse(new Course());
+        clazz.getCourse().setCourseId(1L);
+        List<Classes> classes = Collections.singletonList(clazz);
+        when(classRepository.findByLecturerId(1L)).thenReturn(classes);
+
+        List<ClassDTO> result = userService.getClassesByUserId(1L);
+
+        assertEquals(1, result.size());
+        assertEquals("Class 1", result.get(0).getClassName());
+    }
 
 
     @Test

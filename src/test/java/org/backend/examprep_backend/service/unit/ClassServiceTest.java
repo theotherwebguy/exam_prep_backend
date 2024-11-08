@@ -1,12 +1,9 @@
 package org.backend.examprep_backend.service.unit;
 
-import jakarta.transaction.Transactional;
-//import org.apache.poi.ss.usermodel.MultipartFile;
 import org.backend.examprep_backend.InvalidRoleException;
 import org.backend.examprep_backend.ResourceNotFoundException;
 import org.backend.examprep_backend.dto.ClassDTO;
 import org.backend.examprep_backend.dto.ClassResponseDTO;
-import org.backend.examprep_backend.dto.StudentResponseDTO;
 import org.backend.examprep_backend.model.Classes;
 import org.backend.examprep_backend.model.Course;
 import org.backend.examprep_backend.model.Role;
@@ -19,16 +16,19 @@ import org.backend.examprep_backend.service.ClassService;
 import org.backend.examprep_backend.service.StudentExcelParserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ClassServiceTest {
 
@@ -76,23 +76,23 @@ class ClassServiceTest {
         classDTO.setUserId(1L);
     }
 
-//    @Test
-//    void testAddClassAndStudents() throws Exception {
-//        // Mock the dependencies
-//        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-//        when(userRepository.findById(1L)).thenReturn(Optional.of(lecturer));
-//        when(roleRepository.findByName("STUDENT")).thenReturn(Optional.of(new Role(2L, "STUDENT")));
-//        when(studentExcelParserService.extractStudentsFromExcel(any(), any(), any())).thenReturn(new ArrayList<>());
-//
-//        // Call the method under test
-//        Classes createdClass = classService.addClassAndStudents(1L, classDTO, null);
-//
-//        // Verify interactions and assertions
-//        verify(classRepository).save(any(Classes.class));
-//        assertNotNull(createdClass);
-//        assertEquals("Test Class", createdClass.getClassName());
-//        assertEquals(lecturer, createdClass.getLecturer());
-//    }
+    @Test
+    void testAddClassAndStudents() throws Exception {
+        // Mock the dependencies
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(lecturer));
+        when(roleRepository.findByName("STUDENT")).thenReturn(Optional.of(new Role(2L, "STUDENT")));
+        when(studentExcelParserService.extractStudentsFromExcel(any(), any(), any())).thenReturn(new ArrayList<>());
+
+        // Call the method under test
+        Classes createdClass = classService.addClassAndStudents(1L, classDTO, null);
+
+        // Verify interactions and assertions
+        verify(classRepository).save(any(Classes.class));
+        assertNotNull(createdClass);
+        assertEquals("Test Class", createdClass.getClassName());
+        assertEquals(lecturer, createdClass.getLecturer());
+    }
 
     @Test
     void testAddClassAndStudents_courseNotFound() {
@@ -117,18 +117,18 @@ class ClassServiceTest {
         });
     }
 
-//    @Test
-//    void testAddClassAndStudents_invalidRole() {
-//        // Mock lecturer role mismatch
-//        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-//        when(userRepository.findById(1L)).thenReturn(Optional.of(lecturer));
-//        when(lecturer.getRole().getName()).thenReturn("Student");  // Incorrect role
-//
-//        // Call and assert exception
-//        assertThrows(InvalidRoleException.class, () -> {
-//            classService.addClassAndStudents(1L, classDTO, null);
-//        });
-//    }
+    @Test
+    void testAddClassAndStudents_invalidRole() {
+        // Mock lecturer role mismatch
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(lecturer));
+        when(lecturer.getRole().getName()).thenReturn("Student");  // Incorrect role
+
+        // Call and assert exception
+        assertThrows(InvalidRoleException.class, () -> {
+            classService.addClassAndStudents(1L, classDTO, null);
+        });
+    }
 
     @Test
     void testGetAllClassesWithStudents() {
