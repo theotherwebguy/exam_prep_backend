@@ -157,4 +157,11 @@ public class ClassController {
         LecturerClassCourseDTO lecturerDetails = classService.getCourseDetailsForLecturer(lecturerId);
         return ResponseEntity.ok(lecturerDetails);
     }
+
+    // New function: retrieves all classes without detailed student information
+    @GetMapping("/all")
+    public ResponseEntity<List<ClassResponseDTO>> getAllClasses() {
+        List<ClassResponseDTO> classes = classService.getAllClasses();
+        return ResponseEntity.ok(classes);
+    }
 }
