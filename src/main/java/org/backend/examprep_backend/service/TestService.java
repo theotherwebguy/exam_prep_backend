@@ -19,9 +19,6 @@ public class TestService {
 
 
     @Autowired
-    private ClassRepository classRepository;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -315,77 +312,6 @@ public class TestService {
             }
         }
         return score;
-    }
-
-
-
-    @Transactional
-    public TestDTO lecturerCreateTest(LecturerTestCreationRequestDTO request, Long lecturerId) {
-        // Fetch lecturer (renamed variable for clarity)
-        Users lecturer = userRepository.findById(lecturerId)
-                .orElseThrow(() -> new RuntimeException("Lecturer not found"));
-
-        // Fetch class
-        Classes linkedClass = classRepository.findById(request.getClassId())
-                .orElseThrow(() -> new RuntimeException("Class not found"));
-
-        int totalQuestionCount = 0;
-        for (Integer count : request.getTopicQuestionCount().values()) {
-            totalQuestionCount += count;
-        }
-
-        if (totalQuestionCount <= 0) {
-            throw new IllegalArgumentException("The total question count must be greater than zero.");
-        }
-
-        // Create a new Test and set properties
-        Test test = new Test();
-        test.setName(request.getTestName());
-        test.setDueDate(request.getDueDate());
-        test.setDuration(request.getDuration());
-        test.setInstruction(request.getInstruction());
-        test.setTotalGrade(request.getTotalGrade());
-        test.setQuestionCount(totalQuestionCount);
-        test.setStudent(lecturer);
-        test.setClassAssigned(linkedClass); // Link the test to the specified class
-
-        // Persist the Test entity
-        test = testRepository.save(test);
-
-        List<DomainDTO> domainDTOList = new ArrayList<>();
-
-        if (request.getTopicQuestionCount() == null || request.getTopicQuestionCount().isEmpty()) {
-            throw new RuntimeException("No topics specified for the test.");
-        }
-
-        for (Map.Entry<Long, Integer> entry : request.getTopicQuestionCount().entrySet()) {
-            Long topicId = entry.getKey();
-            Integer questionCount = entry.getValue();
-
-            Topic topic = topicRepository.findById(topicId)
-                    .orElseThrow(() -> new RuntimeException("Topic not found"));
-
-            List<Question> questions = questionRepository.findByTopic(topic)
-                    .stream()
-                    .filter(Question::isModerated)
-                    .limit(questionCount)
-                    .collect(Collectors.toList());
-
-            List<TestQuestion> testQuestions = new ArrayList<>();
-            for (Question question : questions) {
-                TestQuestion testQuestion = createTestQuestion(test, question);
-                testQuestions.add(testQuestion);
-            }
-
-            test.getTestQuestions().addAll(testQuestions);
-
-            DomainDTO domainDTO = createDomainDTO(topic, questions);
-            domainDTOList.add(domainDTO);
-        }
-
-        test = testRepository.save(test); // Persist the test with the updated data
-
-        return mapToTestDTO(test, domainDTOList);
     }
 
 
